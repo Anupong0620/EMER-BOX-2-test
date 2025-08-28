@@ -7,16 +7,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
-    .muted{color:#64748b}
     .btn{border-radius:.5rem;padding:.5rem .9rem;border:1px solid #e5e7eb;background:#f8fafc}
     .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
     .btn.ghost{background:#f1f5f9}
+    .muted{color:#64748b}
     .chip{background:#eef2ff;border:1px solid #c7d2fe;border-radius:9999px;padding:.25rem .6rem;font-size:.75rem}
-    .stepper{display:flex;align-items:center;gap:.25rem}
-    .stepper button{width:32px;height:32px;border:1px solid #e5e7eb;border-radius:.5rem;background:#fff}
-    .stepper input{width:72px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.4rem}
-    th{font-weight:600}
-    thead th{background:#f1f5f9}
+    th{font-weight:600} thead th{background:#f1f5f9}
+    .icon{font-weight:700}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -60,48 +57,70 @@
         </select>
       </div>
 
+      <!-- เหตุผลที่ใช้ (ย้ายขึ้นก่อนรายการยา + เพิ่ม “อื่นๆ”) -->
       <div class="md:col-span-2">
-        <label class="block text-sm mb-1">รายการยาที่ใช้ (เลือกจากสต็อกในกล่อง แล้วระบบจะแสดงล็อต/จำนวนด้านล่างอัตโนมัติ)</label>
-        <div class="flex gap-2">
-          <select id="drugSelect" class="border rounded px-3 py-2 w-full"></select>
-          <input id="drugCustom" class="border rounded px-3 py-2 w-1/2" placeholder="หรือพิมพ์ชื่อยาใหม่">
+        <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="inline-flex items-center gap-2">
+            <input type="radio" name="reason" value="ยาใกล้ EXP"> ยาใกล้ EXP
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input type="radio" name="reason" value="ใช้ยาในกล่อง" checked> ใช้ยาในกล่อง
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input type="radio" name="reason" value="อื่นๆ"> อื่นๆ
+          </label>
+          <input id="reasonOther" class="border rounded px-3 py-2 w-72 hidden" placeholder="ระบุเหตุผลเพิ่มเติม">
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
-        <div class="flex gap-4 items-center">
-          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ยาใกล้ EXP"> ยาใกล้ EXP</label>
-          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ใช้ยาในกล่อง" checked> ใช้ยาในกล่อง</label>
+      <!-- รายการยาที่ใช้ (เลือกจากสต็อกเท่านั้น) -->
+      <div class="md:col-span-2">
+        <label class="block text-sm mb-1">รายการยาที่ใช้ (เลือกจากสต็อกในกล่อง ระบบจะแสดงล็อต/จำนวนด้านล่างอัตโนมัติ)</label>
+        <div class="grid md:grid-cols-3 gap-2">
+          <select id="drugSelect" class="border rounded px-3 py-2 w-full"></select>
+
+          <!-- แถวเพิ่ม “ชุดการใช้” -->
+          <input id="useQty" type="number" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="จำนวนที่ใช้">
+          <div class="flex gap-2">
+            <select id="useLot" class="border rounded px-3 py-2 w-full"></select>
+            <button id="addUseBtn" class="btn">+ เพิ่มชุด</button>
+          </div>
         </div>
+        <div class="muted text-sm mt-1">กด “+ เพิ่มชุด” เมื่อใช้จาก Lot EXP ที่ต่างกันได้หลายรายการ</div>
       </div>
     </div>
 
-    <!-- ตารางล็อต (โหลดอัตโนมัติ) -->
+    <!-- รายการที่จะบันทึก (ยังไม่แตะสต็อก) -->
     <div class="mt-6">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="font-semibold">ยาที่ใช้ไป (เลือก Lot EXP และกำหนดปริมาณด้วย + / −)</h3>
-        <button id="refreshLotsBtn" class="btn ghost">รีเฟรชล็อต</button>
+        <h3 class="font-semibold">รายการที่จะบันทึก (Lot EXP / จำนวนที่ใช้)</h3>
+        <div class="muted text-sm">จะอัปเดตสต็อกเมื่อกด “บันทึก” เท่านั้น</div>
       </div>
+      <div id="pendingWrap" class="space-y-2"></div>
+      <div id="pendingEmpty" class="muted text-sm">— ยังไม่มีรายการที่จะบันทึก —</div>
+    </div>
+
+    <!-- ตารางสต็อก (อ่านอย่างเดียว) -->
+    <div class="mt-6">
+      <h3 class="font-semibold mb-2">สต็อกปัจจุบันของยานี้</h3>
       <div class="overflow-x-auto">
-        <table class="min-w-full border" id="usedLotsTable">
+        <table class="min-w-full border">
           <thead>
             <tr>
-              <th class="p-2 border w-40">Lot EXP</th>
-              <th class="p-2 border w-32">จำนวนคงเหลือ</th>
-              <th class="p-2 border w-44">ใช้ไป</th>
+              <th class="p-2 border w-48">Lot EXP</th>
+              <th class="p-2 border w-32">จำนวน</th><!-- เดิม: จำนวนคงเหลือ -->
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="stockBody"></tbody>
         </table>
       </div>
-      <div class="muted mt-2 text-sm">ค่าที่ใช้ไปของแต่ละล็อตจะไม่เกินจำนวนคงเหลือ</div>
     </div>
 
-    <!-- เพิ่มล็อตใหม่ -->
+    <!-- แก้ไขสต็อก (เพิ่มล็อตใหม่/ลบแถว) -->
     <div class="mt-6">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="font-semibold">แก้ไขสต็อก (เพิ่มล็อตใหม่กรณีของเข้า/EXP ต่าง)</h3>
+        <h3 class="font-semibold">แก้ไขสต็อก (เพิ่มล็อตใหม่)</h3>
         <button id="addNewLotBtn" class="btn">+ เพิ่มแถวล็อตใหม่</button>
       </div>
       <div id="newLots" class="space-y-2"></div>
@@ -128,88 +147,128 @@
 </div>
 
 <script>
-// ==== CONFIG ====
+// ===== CONFIG =====
 const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec';
 
-// ==== State ====
+// ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
-
-function setBoxBadge() {
-  const el = document.getElementById('boxBadge');
-  if (currentBox) { el.textContent = 'กล่อง: ' + currentBox; el.classList.remove('hidden'); }
-  else { el.classList.add('hidden'); }
-}
+let currentLots = [];          // [{expISO, qty}]
+let pendingSets = [];          // [{exp, qtyUsed}]
+function setBoxBadge(){ const el=document.getElementById('boxBadge'); if(currentBox){ el.textContent='กล่อง: '+currentBox; el.classList.remove('hidden'); } else { el.classList.add('hidden'); } }
 function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
-function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent = '', 3000); }
+function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='', 3000); }
 
-async function apiGet(params){ const url = API_BASE + '?' + new URLSearchParams(params).toString(); const r = await fetch(url); return r.json(); }
-async function apiPost(payload){
-  const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'text/plain; charset=UTF-8'}, body: JSON.stringify(payload) });
-  return r.json();
-}
+async function apiGet(p){ const url = API_BASE + '?' + new URLSearchParams(p).toString(); const r = await fetch(url); return r.json(); }
+async function apiPost(payload){ const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'text/plain; charset=UTF-8'}, body: JSON.stringify(payload)}); return r.json(); }
 
-// ==== Boxes ====
+// ===== BOXES =====
 async function loadBoxes(){
   const data = await apiGet({action:'boxes'});
-  const btns = document.getElementById('boxBtns'); btns.innerHTML='';
-  (data.boxes||['IPD01','ER01','ER02','ER03']).forEach(b=>{
-    const btn = document.createElement('button');
-    btn.className='btn'; btn.textContent=b;
-    btn.onclick=()=>{ currentBox=b; localStorage.setItem('em_box',b); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); }
-    btns.appendChild(btn);
+  const b = document.getElementById('boxBtns'); b.innerHTML='';
+  (data.boxes||['IPD01','ER01','ER02','ER03']).forEach(x=>{
+    const btn=document.createElement('button'); btn.className='btn'; btn.textContent=x;
+    btn.onclick=()=>{ currentBox=x; localStorage.setItem('em_box',x); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); };
+    b.appendChild(btn);
   });
 }
 
-// ==== Items & Lots ====
-function getDrugName(){
-  const sel = document.getElementById('drugSelect').value.trim();
-  const custom = document.getElementById('drugCustom').value.trim();
-  return sel || custom; // ใช้ค่าจาก dropdown ก่อน
+// ===== ITEMS & LOTS =====
+function getReason(){
+  const r = document.querySelector('input[name="reason"]:checked');
+  if(!r) return '';
+  if(r.value==='อื่นๆ') return document.getElementById('reasonOther').value.trim();
+  return r.value;
 }
 async function loadItems(){
   if(!currentBox) return;
+  pendingSets=[]; renderPending();
   const data = await apiGet({action:'items', box: currentBox});
   const sel = document.getElementById('drugSelect'); sel.innerHTML='';
-  const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent='- เลือกยา -'; sel.appendChild(opt0);
+  const o0 = document.createElement('option'); o0.value=''; o0.textContent='- เลือกยา -'; sel.appendChild(o0);
   (data.items||[]).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
 }
-function makeStepperCell(expISO, qty){
-  const td = document.createElement('td'); td.className='border p-2';
-  const wrap = document.createElement('div'); wrap.className='stepper';
-  const minus = document.createElement('button'); minus.textContent='−';
-  const input = document.createElement('input'); input.type='number'; input.min='0'; input.max=String(qty); input.value='0'; input.dataset.exp=expISO;
-  const plus  = document.createElement('button'); plus.textContent='+';
-  const clamp=()=>{ let v=Number(input.value)||0; if(v<0)v=0; if(v>qty)v=qty; input.value=String(v); };
-  minus.onclick=()=>{ input.value=String(Math.max(0,(Number(input.value)||0)-1)); clamp(); };
-  plus.onclick =()=>{ input.value=String(Math.min(qty,(Number(input.value)||0)+1)); clamp(); };
-  input.oninput = clamp;
-  wrap.append(minus,input,plus); td.appendChild(wrap);
-  return td;
+function fillLotDropdown(){
+  const lotSel = document.getElementById('useLot');
+  lotSel.innerHTML='';
+  const o0=document.createElement('option'); o0.value=''; o0.textContent='Lot EXP (เลือก)'; lotSel.appendChild(o0);
+  currentLots.forEach(l=>{
+    const opt=document.createElement('option');
+    opt.value=l.expISO; opt.textContent=`${l.expISO} (จำนวน ${l.qty})`;
+    lotSel.appendChild(opt);
+  });
+}
+function renderStockTable(){
+  const tb = document.getElementById('stockBody'); tb.innerHTML='';
+  if(!currentLots.length){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=2; td.className='border p-3 muted'; td.textContent='— ไม่มีล็อตในสต็อกของยานี้ —'; tr.appendChild(td); tb.appendChild(tr); return; }
+  currentLots.forEach(l=>{
+    const tr=document.createElement('tr');
+    const c1=document.createElement('td'); c1.className='border p-2'; c1.textContent=l.expISO||'-';
+    const c2=document.createElement('td'); c2.className='border p-2 text-right'; c2.textContent=l.qty;
+    tr.append(c1,c2); tb.appendChild(tr);
+  });
 }
 async function loadLots(){
-  const drug = getDrugName();
-  const tbody = document.querySelector('#usedLotsTable tbody');
-  tbody.innerHTML='';
-  if(!currentBox || !drug) return;
-
+  const drug = document.getElementById('drugSelect').value.trim();
+  pendingSets=[]; renderPending();
+  document.getElementById('useQty').value='';
+  document.getElementById('useLot').innerHTML='';
+  if(!currentBox || !drug){ currentLots=[]; renderStockTable(); return; }
   const data = await apiGet({action:'lots', box: currentBox, drug});
-  (data.lots||[]).forEach(l=>{
-    const tr = document.createElement('tr');
-    const c1 = document.createElement('td'); c1.className='border p-2'; c1.textContent = l.expISO || '-';
-    const c2 = document.createElement('td'); c2.className='border p-2 text-right'; c2.textContent = l.qty;
-    const c3 = makeStepperCell(l.expISO, l.qty);
-    tr.append(c1,c2,c3); tbody.appendChild(tr);
-  });
-  if(!data.lots || !data.lots.length){
-    const tr=document.createElement('tr'); const td=document.createElement('td');
-    td.colSpan=3; td.className='border p-3 muted'; td.textContent='— ไม่มีล็อตในสต็อกของยานี้ —'; tr.appendChild(td); tbody.appendChild(tr);
-  }
+  currentLots = data.lots || [];
+  renderStockTable();
+  fillLotDropdown();
 }
 
-// ==== New lots area ====
+// ===== PENDING SETS (ยังไม่บันทึก) =====
+function renderPending(){
+  const wrap = document.getElementById('pendingWrap');
+  const empty = document.getElementById('pendingEmpty');
+  wrap.innerHTML='';
+  if(!pendingSets.length){ empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  pendingSets.forEach((it,idx)=>{
+    const row=document.createElement('div');
+    row.className='flex items-center justify-between p-2 border rounded bg-white';
+    row.innerHTML=`<div>Lot EXP: <span class="font-medium">${it.exp}</span> — จำนวนที่ใช้: <span class="font-medium">${it.qtyUsed}</span></div>`;
+    const btns=document.createElement('div'); btns.className='flex gap-2';
+    const edit=document.createElement('button'); edit.className='btn'; edit.innerHTML='<span class="icon">✎</span>'; 
+    const del =document.createElement('button'); del.className='btn'; del.innerHTML='<span class="icon">✕</span>';
+    edit.onclick=()=>{
+      const nv = prompt('แก้ไขจำนวนที่ใช้', String(it.qtyUsed));
+      if(nv===null) return;
+      const newNum = Math.max(0, Number(nv)||0);
+      const lot = currentLots.find(l=>l.expISO===it.exp);
+      const usedSoFar = pendingSets.filter((p,pi)=>p.exp===it.exp && pi!==idx).reduce((s,p)=>s+p.qtyUsed,0);
+      const remain = (lot?lot.qty:0) - usedSoFar;
+      if(newNum>remain){ alert(`เกินจำนวนคงเหลือของล็อตนี้ (เหลือได้อีก ${remain})`); return; }
+      it.qtyUsed=newNum; renderPending();
+    };
+    del.onclick=()=>{ pendingSets.splice(idx,1); renderPending(); };
+    btns.append(edit,del); row.appendChild(btns);
+    wrap.appendChild(row);
+  });
+}
+function addUseSet(){
+  const qty = Math.max(0, Number(document.getElementById('useQty').value)||0);
+  const exp = document.getElementById('useLot').value;
+  if(!exp){ alert('โปรดเลือก Lot EXP'); return; }
+  if(qty<=0){ alert('โปรดระบุจำนวนที่ใช้ (>0)'); return; }
+  const lot = currentLots.find(l=>l.expISO===exp);
+  if(!lot){ alert('ไม่พบล็อตในสต็อก'); return; }
+  const usedSoFar = pendingSets.filter(p=>p.exp===exp).reduce((s,p)=>s+p.qtyUsed,0);
+  if(qty + usedSoFar > lot.qty){ alert(`เกินจำนวนของล็อตนี้ (ใช้ได้อีก ${lot.qty - usedSoFar})`); return; }
+  pendingSets.push({exp, qtyUsed: qty});
+  renderPending();
+  // เคลียร์ช่อง
+  document.getElementById('useQty').value='';
+  document.getElementById('useLot').selectedIndex=0;
+}
+
+// ===== NEW LOTS (เพิ่มเข้า) =====
 function addNewLotRow(){
-  const wrap = document.getElementById('newLots');
-  const row = document.createElement('div');
+  const wrap=document.getElementById('newLots');
+  const row=document.createElement('div');
   row.className='grid md:grid-cols-3 gap-2';
   row.innerHTML=`
     <div><label class="block text-sm mb-1">Lot EXP (ใหม่)</label><input type="date" class="border rounded px-3 py-2 w-full" data-type="exp"></div>
@@ -217,63 +276,79 @@ function addNewLotRow(){
     <div class="flex items-end"><button class="btn" onclick="this.closest('div.grid').remove()">ลบแถว</button></div>`;
   wrap.appendChild(row);
 }
+function collectNewLots(){
+  const arr=[];
+  document.querySelectorAll('#newLots [data-type="exp"]').forEach(expEl=>{
+    const qtyEl = expEl.closest('.grid').querySelector('[data-type="qty"]');
+    const exp = expEl.value; const qty = Number(qtyEl.value)||0;
+    if(exp && qty>0) arr.push({exp, qty});
+  });
+  return arr;
+}
 
-// ==== Submit ====
+// ===== SUBMIT =====
 async function submitData(){
   const msg = document.getElementById('saveMsg');
   const dateVisit = document.getElementById('dateVisit').value || new Date().toISOString().slice(0,10);
   const inspector = document.getElementById('inspector').value || '';
-  const reason = (document.querySelector('input[name="reason"]:checked')||{}).value || '';
-  const drug = getDrugName();
+  const reason = getReason();
+  const drug = document.getElementById('drugSelect').value.trim();
+
   if(!currentBox){ toast(msg,'ยังไม่ได้เลือกกล่อง'); return; }
-  if(!drug){ toast(msg,'โปรดเลือก/พิมพ์ชื่อยา'); return; }
+  if(!drug){ toast(msg,'โปรดเลือกยา'); return; }
+  if(!reason){ toast(msg,'โปรดระบุเหตุผลที่ใช้'); return; }
 
-  // เก็บรายการ "ใช้ไป" จากสเต็ปเปอร์
-  const usedLots = [];
-  document.querySelectorAll('#usedLotsTable tbody input[type="number"]').forEach(inp=>{
-    const qtyUsed = Number(inp.value)||0; const exp = inp.dataset.exp;
-    if(qtyUsed > 0) usedLots.push({ exp, qtyUsed }); // ไม่มี delete แล้ว
-  });
-
-  // ล็อตใหม่ที่ใส่เข้า
-  const newLots = [];
-  document.querySelectorAll('#newLots [data-type="exp"]').forEach(expEl=>{
-    const qtyEl = expEl.closest('.grid').querySelector('[data-type="qty"]');
-    const exp = expEl.value; const qty = Number(qtyEl.value)||0;
-    if(exp && qty>0) newLots.push({ exp, qty });
-  });
+  // ตรวจอีกชั้น: แต่ละล็อตรวมกันไม่เกินยอด
+  const usedByLot = {};
+  pendingSets.forEach(p=> usedByLot[p.exp]=(usedByLot[p.exp]||0)+p.qtyUsed );
+  for(const exp in usedByLot){
+    const lot = currentLots.find(l=>l.expISO===exp);
+    if(lot && usedByLot[exp] > lot.qty){
+      toast(msg, `ล็อต ${exp} เกินจำนวนในสต็อก`); return;
+    }
+  }
 
   try{
-    const res = await apiPost({ box: currentBox, dateVisit, drug, reason, inspector, usedLots, newLots });
+    const res = await apiPost({
+      box: currentBox,
+      dateVisit, drug, reason, inspector,
+      usedLots: pendingSets.map(p=>({exp: p.exp, qtyUsed: p.qtyUsed})),
+      newLots: collectNewLots()
+    });
     if(res.ok){
-      toast(msg,'บันทึกแล้ว'); document.getElementById('newLots').innerHTML='';
-      await loadItems(); await loadLots(); await loadNear();
+      toast(msg,'บันทึกแล้ว');
+      // เคลียร์รายการที่จะบันทึก/ล็อตใหม่ แล้วรีโหลดสต็อก
+      pendingSets=[]; renderPending();
+      document.getElementById('newLots').innerHTML='';
+      await loadLots(); await loadNear();
     }else{
-      toast(msg,'ผิดพลาด: ' + res.error);
+      toast(msg, 'ผิดพลาด: ' + res.error);
     }
-  }catch(e){ toast(msg,'เชื่อมต่อไม่ได้: ' + (e?.message||e)); }
+  }catch(e){
+    toast(msg,'เชื่อมต่อไม่ได้: ' + (e?.message||e));
+  }
 }
 
-// ==== Near expiry ====
+// ===== NEAR EXPIRY =====
 async function loadNear(){
   if(!currentBox) return;
   const days = Number(document.getElementById('nearDays').value)||90;
   const data = await apiGet({action:'near', box: currentBox, days});
   const list = document.getElementById('nearList'); list.innerHTML='';
-  const title = document.createElement('div'); title.className='mb-2 muted';
-  title.textContent = `กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days} วัน`; list.appendChild(title);
+  const title=document.createElement('div'); title.className='mb-2 muted';
+  title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days} วัน`;
+  list.appendChild(title);
   (data.rows||[]).forEach(r=>{
-    const el = document.createElement('div');
-    el.className='p-3 border rounded flex items-center justify-between';
-    el.innerHTML = `<div><div class="font-medium">${r.drug}</div><div class="muted">Lot EXP: ${r.expISO}</div></div><div class="text-right">Qty: ${r.qty}</div>`;
+    const el=document.createElement('div'); el.className='p-3 border rounded flex items-center justify-between';
+    el.innerHTML = `<div><div class="font-medium">${r.drug}</div><div class="muted">Lot EXP: ${r.expISO}</div></div><div class="text-right">จำนวน: ${r.qty}</div>`;
     list.appendChild(el);
   });
-  if(!data.rows||!data.rows.length){
+  if(!data.rows || !data.rows.length){
     const empty=document.createElement('div'); empty.className='muted'; empty.textContent='— ไม่มีรายการใกล้หมดอายุ —'; list.appendChild(empty);
   }
 }
 
-// ==== Events ====
+// ===== EVENTS =====
 window.addEventListener('DOMContentLoaded', ()=>{
   setBoxBadge();
   document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
@@ -286,9 +361,16 @@ window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('boxSetBtn').onclick  = ()=>{ const v=document.getElementById('boxInput').value.trim(); if(v){ currentBox=v; localStorage.setItem('em_box',v); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); } };
   document.getElementById('boxClearBtn').onclick= ()=>{ localStorage.removeItem('em_box'); currentBox=''; setBoxBadge(); switchView('view-select'); };
 
-  document.getElementById('drugSelect').addEventListener('change', ()=>{ document.getElementById('drugCustom').value=''; loadLots(); });
-  document.getElementById('drugCustom').addEventListener('change', loadLots);
-  document.getElementById('refreshLotsBtn').onclick = loadLots;
+  document.getElementById('drugSelect').addEventListener('change', loadLots);
+  document.getElementById('addUseBtn').onclick = addUseSet;
+
+  document.querySelectorAll('input[name="reason"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const other = document.getElementById('reasonOther');
+      if(r.value==='อื่นๆ' && r.checked){ other.classList.remove('hidden'); other.focus(); }
+      else if(r.value!=='อื่นๆ'){ other.classList.add('hidden'); other.value=''; }
+    });
+  });
 
   document.getElementById('addNewLotBtn').onclick = addNewLotRow;
   document.getElementById('submitBtn').onclick = submitData;
