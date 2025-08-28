@@ -79,10 +79,7 @@
 
     <!-- สต็อก + ใช้ไป -->
     <div class="mt-6">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="font-semibold">สต็อกปัจจุบันของยานี้</h3>
-        <button id="toggleEditStock" class="btn">แก้ไขสต็อกยาปัจจุบัน</button>
-      </div>
+      <h3 class="font-semibold mb-2">สต็อกปัจจุบันของยานี้</h3>
       <div class="overflow-x-auto">
         <table class="min-w-full border">
           <thead>
@@ -97,27 +94,29 @@
       </div>
     </div>
 
-    <!-- พาเนลแก้ไขสต็อก -->
-    <div id="editPanel" class="mt-4 hidden">
+    <!-- เพิ่มยาเข้าใหม่ (กรณีของเข้า/ต่างวันหมดอายุ) -->
+    <div class="mt-6">
       <div class="flex items-center justify-between mb-2">
-        <div class="muted">แก้ไขวัน EXP / จำนวน หรือกด <span class="font-medium">+ เพิ่ม</span> (กดกรณียาที่เพิ่มมีหลาย EXP)</div>
-        <div class="flex gap-2">
-          <button id="addEditRow" class="btn">+ เพิ่ม</button>
-          <button id="cancelEdit" class="btn">ปิด</button>
+        <h3 class="font-semibold">เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)</h3>
+        <div class="muted text-sm">กด “+ เพิ่ม” กรณียาใหม่มีหลายวันหมดอายุ</div>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-2">
+        <div>
+          <label class="block text-sm mb-1">วันหมดอายุ (EXP)</label>
+          <input type="date" id="addExp" class="border rounded px-3 py-2 w-full">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">จำนวน</label>
+          <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="เช่น 2">
+        </div>
+        <div class="flex items-end">
+          <button id="addNewBtn" class="btn">+ เพิ่ม</button>
         </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="min-w-full border">
-          <thead>
-            <tr>
-              <th class="p-2 border w-48">Lot EXP</th>
-              <th class="p-2 border w-32">จำนวน</th>
-              <th class="p-2 border w-24">ลบ</th>
-            </tr>
-          </thead>
-          <tbody id="editBody"></tbody>
-        </table>
-      </div>
+
+      <div id="newList" class="mt-3 space-y-2"></div>
+      <div id="newEmpty" class="muted text-sm mt-2">— ยังไม่มีรายการยาเข้าใหม่ —</div>
     </div>
 
     <div class="mt-6 flex gap-2 items-center">
@@ -146,10 +145,9 @@ const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGef
 
 // ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
-let currentLots = [];         // [{expISO, qty}]
-let originalLots = [];        // snapshot สำหรับคำนวณ diff ในพาเนลแก้ไข
-let useInputs = {};           // exp -> qtyUsed (จากสเต็ปเปอร์)
-let editRows = [];            // rows ในพาเนลแก้ไข [{id, exp, qty, deleted, isNew}]
+let currentLots = [];     // [{expISO, qty}]
+let useInputs   = {};     // exp -> qtyUsed
+let newLotsPend = [];     // [{exp, qty}]
 
 function setBoxBadge(){ const el=document.getElementById('boxBadge'); if(currentBox){ el.textContent='กล่อง: '+currentBox; el.classList.remove('hidden'); } else { el.classList.add('hidden'); } }
 function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
@@ -169,15 +167,18 @@ async function loadBoxes(){
   });
 }
 
-// ===== ITEMS & LOTS =====
+// ===== REASON =====
 function getReason(){
   const r = document.querySelector('input[name="reason"]:checked');
   if(!r) return '';
   if(r.value==='อื่นๆ') return document.getElementById('reasonOther').value.trim();
   return r.value;
 }
+
+// ===== ITEMS & LOTS =====
 async function loadItems(){
   if(!currentBox) return;
+  useInputs={}; newLotsPend=[]; renderNewList();
   const data = await apiGet({action:'items', box: currentBox});
   const sel = document.getElementById('drugSelect'); sel.innerHTML='';
   const o0 = document.createElement('option'); o0.value=''; o0.textContent='- เลือกยา -'; sel.appendChild(o0);
@@ -186,7 +187,7 @@ async function loadItems(){
 function makeStepper(exp, maxQty){
   const wrap = document.createElement('div'); wrap.className='stepper';
   const minus=document.createElement('button'); minus.textContent='−';
-  const input=document.createElement('input'); input.type='number'; input.min='0'; input.max=String(maxQty); input.value=String(useInputs[exp]||0);
+  const input=document.createElement('input'); input.type='number'; input.min='0'; input.max=String(maxQty); input.value=String(useInputs[exp]||0); input.dataset.exp=exp;
   const plus =document.createElement('button'); plus.textContent='+';
   const clamp=()=>{ let v=Number(input.value)||0; if(v<0)v=0; if(v>maxQty)v=maxQty; input.value=String(v); useInputs[exp]=v; };
   minus.onclick=()=>{ input.value=String(Math.max(0,(Number(input.value)||0)-1)); clamp(); };
@@ -198,8 +199,7 @@ function makeStepper(exp, maxQty){
 function renderStockTable(){
   const tb = document.getElementById('stockBody'); tb.innerHTML='';
   if(!currentLots.length){
-    const tr=document.createElement('tr'); const td=document.createElement('td');
-    td.colSpan=3; td.className='border p-3 muted'; td.textContent='— ไม่มีล็อตในสต็อกของยานี้ —';
+    const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=3; td.className='border p-3 muted'; td.textContent='— ไม่มีล็อตในสต็อกของยานี้ —';
     tr.appendChild(td); tb.appendChild(tr); return;
   }
   currentLots.forEach(l=>{
@@ -212,77 +212,40 @@ function renderStockTable(){
 }
 async function loadLots(){
   const drug = document.getElementById('drugSelect').value.trim();
-  useInputs = {};
-  document.getElementById('editPanel').classList.add('hidden');
+  useInputs={}; newLotsPend=[]; renderNewList();
   if(!currentBox || !drug){ currentLots=[]; renderStockTable(); return; }
   const data = await apiGet({action:'lots', box: currentBox, drug});
   currentLots = data.lots || [];
-  originalLots = JSON.parse(JSON.stringify(currentLots)); // snapshot
   renderStockTable();
 }
 
-// ===== EDIT PANEL =====
-function openEditPanel(){
-  editRows = originalLots.map((l,idx)=>({id: idx, exp: l.expISO, qty: l.qty, deleted: false, isNew: false}));
-  renderEditRows();
-  document.getElementById('editPanel').classList.remove('hidden');
-}
-function renderEditRows(){
-  const body = document.getElementById('editBody'); body.innerHTML='';
-  if(!editRows.length){
-    const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=3; td.className='border p-3 muted'; td.textContent='— ไม่มีแถว —'; tr.appendChild(td); body.appendChild(tr); return;
-  }
-  editRows.forEach((r,idx)=>{
-    const tr=document.createElement('tr');
-    const d1=document.createElement('td'); d1.className='border p-2';
-    const exp=document.createElement('input'); exp.type='date'; exp.className='border rounded px-3 py-2 w-full'; exp.value=r.exp; exp.oninput=()=>r.exp=exp.value; d1.appendChild(exp);
-    const d2=document.createElement('td'); d2.className='border p-2';
-    const qty=document.createElement('input'); qty.type='number'; qty.min='0'; qty.step='1'; qty.className='border rounded px-3 py-2 w-full'; qty.value=r.qty; qty.oninput=()=>r.qty=Math.max(0,Number(qty.value)||0); d2.appendChild(qty);
-    const d3=document.createElement('td'); d3.className='border p-2 text-center';
-    const del=document.createElement('input'); del.type='checkbox'; del.checked=r.deleted; del.onchange=()=>r.deleted=del.checked; d3.appendChild(del);
-    tr.append(d1,d2,d3); body.appendChild(tr);
+// ===== NEW LOTS (เพิ่มเข้าใหม่) =====
+function renderNewList(){
+  const wrap = document.getElementById('newList');
+  const empty = document.getElementById('newEmpty');
+  wrap.innerHTML='';
+  if(!newLotsPend.length){ empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  newLotsPend.forEach((n,idx)=>{
+    const row=document.createElement('div');
+    row.className='flex items-center justify-between p-2 border rounded bg-white';
+    row.innerHTML=`<div>EXP: <span class="font-medium">${n.exp}</span> — จำนวน: <span class="font-medium">${n.qty}</span></div>`;
+    const del=document.createElement('button'); del.className='btn'; del.textContent='ลบ';
+    del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); };
+    row.appendChild(del);
+    wrap.appendChild(row);
   });
 }
-function addEditRow(){
-  editRows.push({id: 'n'+Date.now(), exp:'', qty:0, deleted:false, isNew:true});
-  renderEditRows();
-}
-
-// คำนวณ diff เป็น {usedLots:[], newLots:[]}
-function diffEdits(){
-  const usedLots=[], newLots=[];
-  const mapOrigById = {}; originalLots.forEach((o,idx)=> mapOrigById[idx]={exp:o.expISO, qty:o.qty});
-
-  editRows.forEach(r=>{
-    if(String(r.id).startsWith('n')){ // แถวใหม่
-      if(r.qty>0 && r.exp) newLots.push({exp: r.exp, qty: r.qty});
-      return;
-    }
-    const orig = mapOrigById[r.id]; if(!orig) return;
-
-    if(r.deleted){
-      // ลบทิ้งทั้งล็อต
-      usedLots.push({exp: orig.exp, qtyUsed: 0, delete: true});
-      return;
-    }
-
-    if(r.exp !== orig.exp){
-      // ย้ายล็อต: ลบเดิม + เพิ่มใหม่
-      usedLots.push({exp: orig.exp, qtyUsed: 0, delete: true});
-      if(r.qty>0 && r.exp) newLots.push({exp: r.exp, qty: r.qty});
-      return;
-    }
-
-    // exp เท่าเดิม → เปรียบเทียบจำนวน
-    const delta = r.qty - orig.qty;
-    if(delta > 0){
-      newLots.push({exp: r.exp, qty: delta});
-    }else if(delta < 0){
-      usedLots.push({exp: r.exp, qtyUsed: -delta}); // ลดลง = ใช้ไป
-    }
-  });
-
-  return {usedLots, newLots};
+function addNewLot(){
+  const exp = (document.getElementById('addExp').value || '').trim();
+  const qty = Math.max(0, Number(document.getElementById('addQty').value)||0);
+  if(!exp){ alert('โปรดระบุวันหมดอายุ'); return; }
+  if(qty<=0){ alert('โปรดระบุจำนวน (>0)'); return; }
+  newLotsPend.push({exp, qty});
+  renderNewList();
+  document.getElementById('addExp').value='';
+  document.getElementById('addQty').value='';
 }
 
 // ===== SUBMIT =====
@@ -297,28 +260,22 @@ async function submitData(){
   if(!drug){ toast(msg,'โปรดเลือกยา'); return; }
   if(!reason){ toast(msg,'โปรดระบุเหตุผลที่ใช้'); return; }
 
-  // 1) ใช้ไปจากสเต็ปเปอร์
+  // ใช้ไปจากสเต็ปเปอร์
   const usedLots = Object.entries(useInputs)
                     .filter(([exp,qty])=> (Number(qty)||0) > 0)
                     .map(([exp,qty])=>({exp, qtyUsed:Number(qty)}));
-
-  // 2) การแก้ไขสต็อกถ้ามีเปิดพาเนล
-  let edits = {usedLots:[], newLots:[]};
-  if(!document.getElementById('editPanel').classList.contains('hidden')){
-    edits = diffEdits();
-  }
 
   try{
     const res = await apiPost({
       box: currentBox,
       dateVisit, drug, reason, inspector,
-      usedLots: [...usedLots, ...edits.usedLots],
-      newLots: edits.newLots
+      usedLots,
+      newLots: newLotsPend
     });
     if(res.ok){
       toast(msg,'บันทึกแล้ว');
       // รีเซ็ต & โหลดใหม่
-      useInputs={}; document.getElementById('editPanel').classList.add('hidden');
+      useInputs={}; newLotsPend=[]; renderNewList();
       await loadLots(); await loadNear();
     }else{
       toast(msg,'ผิดพลาด: ' + res.error);
@@ -370,10 +327,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     });
   });
 
-  document.getElementById('toggleEditStock').onclick = openEditPanel;
-  document.getElementById('addEditRow').onclick = addEditRow;
-  document.getElementById('cancelEdit').onclick = ()=> document.getElementById('editPanel').classList.add('hidden');
-
+  document.getElementById('addNewBtn').onclick = addNewLot;
   document.getElementById('submitBtn').onclick = submitData;
   document.getElementById('refreshNearBtn').onclick = loadNear;
 });
