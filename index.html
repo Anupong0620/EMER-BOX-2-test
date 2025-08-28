@@ -7,8 +7,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
-    .chip{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:9999px;padding:.25rem .5rem;font-size:.75rem}
     .muted{color:#64748b}
+    .btn{border-radius:.5rem;padding:.5rem .9rem;border:1px solid #e5e7eb;background:#f8fafc}
+    .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+    .btn.ghost{background:#f1f5f9}
+    .chip{background:#eef2ff;border:1px solid #c7d2fe;border-radius:9999px;padding:.25rem .6rem;font-size:.75rem}
+    .stepper{display:flex;align-items:center;gap:.25rem}
+    .stepper button{width:32px;height:32px;border:1px solid #e5e7eb;border-radius:.5rem;background:#fff}
+    .stepper input{width:72px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.4rem}
+    th{font-weight:600}
+    thead th{background:#f1f5f9}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -18,25 +26,28 @@
     <div id="boxBadge" class="chip hidden"></div>
   </header>
 
-  <div class="grid md:grid-cols-3 gap-4 mb-4">
-    <button id="tab-select" class="px-4 py-2 card text-left">หน้า 1: เลือกกล่องยา</button>
-    <button id="tab-form" class="px-4 py-2 card text-left">หน้า 2: ลงข้อมูล</button>
-    <button id="tab-view" class="px-4 py-2 card text-left">หน้าแสดงผล</button>
+  <!-- Step tabs -->
+  <div class="grid md:grid-cols-3 gap-3 mb-4">
+    <button id="tab-select" class="btn card text-left">หน้า 1: เลือกกล่องยา</button>
+    <button id="tab-form"   class="btn card text-left">หน้า 2: ลงข้อมูล</button>
+    <button id="tab-view"   class="btn card text-left">หน้าแสดงผล</button>
   </div>
 
+  <!-- เลือกกล่องยา -->
   <section id="view-select" class="card p-4">
     <h2 class="text-xl font-semibold mb-3">เลือกกล่องยา</h2>
-    <p class="muted mb-3">ตัวอย่าง: IPD01, ER01, ER02, ER03</p>
     <div class="flex gap-2 flex-wrap mb-4" id="boxBtns"></div>
     <div class="flex items-center gap-2">
       <input id="boxInput" class="border rounded px-3 py-2 w-48" placeholder="หรือพิมพ์เอง เช่น ER03">
-      <button id="boxSetBtn" class="px-4 py-2 rounded bg-blue-600 text-white">เลือกกล่องนี้</button>
-      <button id="boxClearBtn" class="px-3 py-2 rounded bg-slate-200">ล้าง</button>
+      <button id="boxSetBtn" class="btn primary">เลือกกล่องนี้</button>
+      <button id="boxClearBtn" class="btn">ล้าง</button>
     </div>
   </section>
 
+  <!-- ลงข้อมูล -->
   <section id="view-form" class="card p-4 hidden">
     <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
+
     <div class="grid md:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm mb-1">วันที่มาที่ห้องยา</label>
@@ -45,69 +56,71 @@
       <div>
         <label class="block text-sm mb-1">ผู้ตรวจสอบ</label>
         <select id="inspector" class="border rounded px-3 py-2 w-full">
-          <option value="">- เลือก -</option>
-          <option>A</option>
-          <option>B</option>
-          <option>C</option>
+          <option value="">- เลือก -</option><option>A</option><option>B</option><option>C</option>
         </select>
       </div>
-      <div>
-        <label class="block text-sm mb-1">รายการยาที่ใช้ (เลือกจากสต็อกในกล่อง)</label>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm mb-1">รายการยาที่ใช้ (เลือกจากสต็อกในกล่อง แล้วระบบจะแสดงล็อต/จำนวนด้านล่างอัตโนมัติ)</label>
         <div class="flex gap-2">
           <select id="drugSelect" class="border rounded px-3 py-2 w-full"></select>
           <input id="drugCustom" class="border rounded px-3 py-2 w-1/2" placeholder="หรือพิมพ์ชื่อยาใหม่">
         </div>
       </div>
+
       <div>
         <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
         <div class="flex gap-4 items-center">
           <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ยาใกล้ EXP"> ยาใกล้ EXP</label>
-          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ใช้ยาในกล่อง"> ใช้ยาในกล่อง</label>
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ใช้ยาในกล่อง" checked> ใช้ยาในกล่อง</label>
         </div>
       </div>
     </div>
 
+    <!-- ตารางล็อต (โหลดอัตโนมัติ) -->
     <div class="mt-6">
-      <h3 class="font-semibold mb-2">ยาที่ใช้ไป (เลือกล็อต/วันหมดอายุที่จะหักสต็อก หรือกดลบล็อตเดิม)</h3>
-      <p class="muted mb-3">หลังเลือกยา ให้กดปุ่ม “โหลดล็อตจากสต็อก” เพื่อตรวจสอบล็อตที่มีอยู่</p>
-      <div class="flex gap-2 mb-3">
-        <button id="loadLotsBtn" class="px-3 py-2 rounded bg-slate-200">โหลดล็อตจากสต็อก</button>
-        <button id="clearLotsBtn" class="px-3 py-2 rounded bg-slate-200">ล้างรายการ</button>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold">ยาที่ใช้ไป (เลือก Lot EXP และกำหนดปริมาณด้วย + / −)</h3>
+        <button id="refreshLotsBtn" class="btn ghost">รีเฟรชล็อต</button>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full border" id="usedLotsTable">
-          <thead class="bg-slate-100">
+          <thead>
             <tr>
-              <th class="p-2 border">EXP</th>
-              <th class="p-2 border">จำนวนคงเหลือ</th>
-              <th class="p-2 border">ใช้ไป</th>
-              <th class="p-2 border">ลบล็อตนี้</th>
+              <th class="p-2 border w-40">Lot EXP</th>
+              <th class="p-2 border w-32">จำนวนคงเหลือ</th>
+              <th class="p-2 border w-44">ใช้ไป</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
+      <div class="muted mt-2 text-sm">ค่าที่ใช้ไปของแต่ละล็อตจะไม่เกินจำนวนคงเหลือ</div>
     </div>
 
+    <!-- เพิ่มล็อตใหม่ -->
     <div class="mt-6">
-      <h3 class="font-semibold mb-2">เพิ่มล็อตใหม่ (กรณีใส่ยาเข้าไปใหม่)</h3>
-      <button id="addNewLotBtn" class="px-3 py-2 rounded bg-green-600 text-white mb-3">+ เพิ่มแถวล็อตใหม่</button>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold">แก้ไขสต็อก (เพิ่มล็อตใหม่กรณีของเข้า/EXP ต่าง)</h3>
+        <button id="addNewLotBtn" class="btn">+ เพิ่มแถวล็อตใหม่</button>
+      </div>
       <div id="newLots" class="space-y-2"></div>
     </div>
 
-    <div class="mt-6 flex gap-2">
-      <button id="submitBtn" class="px-4 py-2 rounded bg-blue-600 text-white">บันทึก</button>
+    <div class="mt-6 flex gap-2 items-center">
+      <button id="submitBtn" class="btn primary">บันทึก</button>
       <div id="saveMsg" class="muted"></div>
     </div>
   </section>
 
+  <!-- สรุป/ใกล้หมดอายุ -->
   <section id="view-output" class="card p-4 hidden">
     <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
       <div>
         <label class="mr-2 muted">ภายใน (วัน)</label>
         <input id="nearDays" type="number" min="1" value="90" class="border rounded px-3 py-1 w-24">
-        <button id="refreshNearBtn" class="ml-2 px-3 py-1 rounded bg-slate-200">รีเฟรช</button>
+        <button id="refreshNearBtn" class="btn">รีเฟรช</button>
       </div>
     </div>
     <div id="nearList" class="space-y-2"></div>
@@ -126,155 +139,137 @@ function setBoxBadge() {
   if (currentBox) { el.textContent = 'กล่อง: ' + currentBox; el.classList.remove('hidden'); }
   else { el.classList.add('hidden'); }
 }
-function switchView(id) {
-  ['view-select','view-form','view-output'].forEach(v=> document.getElementById(v).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-function toast(el, msg) { el.textContent = msg; setTimeout(()=> el.textContent = '', 3000); }
+function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent = '', 3000); }
 
-async function apiGet(params) {
-  const url = API_BASE + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, { method: 'GET' });
-  return res.json();
+async function apiGet(params){ const url = API_BASE + '?' + new URLSearchParams(params).toString(); const r = await fetch(url); return r.json(); }
+async function apiPost(payload){
+  const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'text/plain; charset=UTF-8'}, body: JSON.stringify(payload) });
+  return r.json();
 }
-async function apiPost(payload) {
-  // ใช้ text/plain เพื่อตัด preflight CORS
-  const res = await fetch(API_BASE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain; charset=UTF-8' },
-    body: JSON.stringify(payload),
+
+// ==== Boxes ====
+async function loadBoxes(){
+  const data = await apiGet({action:'boxes'});
+  const btns = document.getElementById('boxBtns'); btns.innerHTML='';
+  (data.boxes||['IPD01','ER01','ER02','ER03']).forEach(b=>{
+    const btn = document.createElement('button');
+    btn.className='btn'; btn.textContent=b;
+    btn.onclick=()=>{ currentBox=b; localStorage.setItem('em_box',b); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); }
+    btns.appendChild(btn);
   });
-  return res.json();
 }
 
-// ==== Populate boxes ====
-async function loadBoxes() {
-  try {
-    const data = await apiGet({ action: 'boxes' });
-    const btns = document.getElementById('boxBtns');
-    btns.innerHTML = '';
-    (data.boxes || ['IPD01','ER01','ER02','ER03']).forEach(b=>{
-      const btn = document.createElement('button');
-      btn.className = 'px-3 py-2 rounded bg-slate-200';
-      btn.textContent = b;
-      btn.onclick = ()=>{
-        currentBox = b; localStorage.setItem('em_box', b);
-        setBoxBadge(); loadItems(); loadNear(); switchView('view-form');
-      };
-      btns.appendChild(btn);
-    });
-  } catch {}
+// ==== Items & Lots ====
+function getDrugName(){
+  const sel = document.getElementById('drugSelect').value.trim();
+  const custom = document.getElementById('drugCustom').value.trim();
+  return sel || custom; // ใช้ค่าจาก dropdown ก่อน
 }
-
-// ==== Items / Lots ====
-async function loadItems() {
-  if (!currentBox) return;
-  const data = await apiGet({ action: 'items', box: currentBox });
-  const sel = document.getElementById('drugSelect');
-  sel.innerHTML = '';
+async function loadItems(){
+  if(!currentBox) return;
+  const data = await apiGet({action:'items', box: currentBox});
+  const sel = document.getElementById('drugSelect'); sel.innerHTML='';
   const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent='- เลือกยา -'; sel.appendChild(opt0);
-  (data.items||[]).forEach(n=>{
-    const opt = document.createElement('option'); opt.value = n; opt.textContent = n; sel.appendChild(opt);
-  });
+  (data.items||[]).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
 }
-
-async function loadLots() {
+function makeStepperCell(expISO, qty){
+  const td = document.createElement('td'); td.className='border p-2';
+  const wrap = document.createElement('div'); wrap.className='stepper';
+  const minus = document.createElement('button'); minus.textContent='−';
+  const input = document.createElement('input'); input.type='number'; input.min='0'; input.max=String(qty); input.value='0'; input.dataset.exp=expISO;
+  const plus  = document.createElement('button'); plus.textContent='+';
+  const clamp=()=>{ let v=Number(input.value)||0; if(v<0)v=0; if(v>qty)v=qty; input.value=String(v); };
+  minus.onclick=()=>{ input.value=String(Math.max(0,(Number(input.value)||0)-1)); clamp(); };
+  plus.onclick =()=>{ input.value=String(Math.min(qty,(Number(input.value)||0)+1)); clamp(); };
+  input.oninput = clamp;
+  wrap.append(minus,input,plus); td.appendChild(wrap);
+  return td;
+}
+async function loadLots(){
   const drug = getDrugName();
-  if (!currentBox || !drug) return;
-  const data = await apiGet({ action: 'lots', box: currentBox, drug });
   const tbody = document.querySelector('#usedLotsTable tbody');
-  tbody.innerHTML = '';
+  tbody.innerHTML='';
+  if(!currentBox || !drug) return;
+
+  const data = await apiGet({action:'lots', box: currentBox, drug});
   (data.lots||[]).forEach(l=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="border p-2">${l.expISO}</td>
-      <td class="border p-2 text-right">${l.qty}</td>
-      <td class="border p-2"><input type="number" min="0" max="${l.qty}" step="1" class="border rounded px-2 py-1 w-24" data-exp="${l.expISO}" value="0"></td>
-      <td class="border p-2 text-center"><input type="checkbox" data-del="${l.expISO}"></td>
-    `;
-    tbody.appendChild(tr);
+    const c1 = document.createElement('td'); c1.className='border p-2'; c1.textContent = l.expISO || '-';
+    const c2 = document.createElement('td'); c2.className='border p-2 text-right'; c2.textContent = l.qty;
+    const c3 = makeStepperCell(l.expISO, l.qty);
+    tr.append(c1,c2,c3); tbody.appendChild(tr);
   });
+  if(!data.lots || !data.lots.length){
+    const tr=document.createElement('tr'); const td=document.createElement('td');
+    td.colSpan=3; td.className='border p-3 muted'; td.textContent='— ไม่มีล็อตในสต็อกของยานี้ —'; tr.appendChild(td); tbody.appendChild(tr);
+  }
 }
-function clearLots() { document.querySelector('#usedLotsTable tbody').innerHTML = ''; }
 
-function addNewLotRow() {
+// ==== New lots area ====
+function addNewLotRow(){
   const wrap = document.getElementById('newLots');
   const row = document.createElement('div');
-  row.className = 'grid md:grid-cols-3 gap-2';
-  row.innerHTML = `
-    <div><label class="block text-sm mb-1">EXP ใหม่</label><input type="date" class="border rounded px-3 py-2 w-full" data-type="exp"></div>
+  row.className='grid md:grid-cols-3 gap-2';
+  row.innerHTML=`
+    <div><label class="block text-sm mb-1">Lot EXP (ใหม่)</label><input type="date" class="border rounded px-3 py-2 w-full" data-type="exp"></div>
     <div><label class="block text-sm mb-1">จำนวน</label><input type="number" min="0" step="1" class="border rounded px-3 py-2 w-full" data-type="qty" placeholder="เช่น 2"></div>
-    <div class="flex items-end"><button class="px-3 py-2 rounded bg-slate-200" onclick="this.closest('div.grid').remove()">ลบแถว</button></div>
-  `;
+    <div class="flex items-end"><button class="btn" onclick="this.closest('div.grid').remove()">ลบแถว</button></div>`;
   wrap.appendChild(row);
 }
 
-function getDrugName() {
-  const sel = document.getElementById('drugSelect').value.trim();
-  const custom = document.getElementById('drugCustom').value.trim();
-  return custom || sel;
-}
-
-async function submitData() {
+// ==== Submit ====
+async function submitData(){
   const msg = document.getElementById('saveMsg');
   const dateVisit = document.getElementById('dateVisit').value || new Date().toISOString().slice(0,10);
   const inspector = document.getElementById('inspector').value || '';
   const reason = (document.querySelector('input[name="reason"]:checked')||{}).value || '';
   const drug = getDrugName();
-  if (!currentBox) { toast(msg, 'ยังไม่ได้เลือกกล่อง'); return; }
-  if (!drug) { toast(msg, 'โปรดเลือก/พิมพ์ชื่อยา'); return; }
+  if(!currentBox){ toast(msg,'ยังไม่ได้เลือกกล่อง'); return; }
+  if(!drug){ toast(msg,'โปรดเลือก/พิมพ์ชื่อยา'); return; }
 
+  // เก็บรายการ "ใช้ไป" จากสเต็ปเปอร์
   const usedLots = [];
-  document.querySelectorAll('#usedLotsTable tbody tr').forEach(tr=>{
-    const qtyUsed = Number(tr.querySelector('input[type="number"]').value)||0;
-    const exp = tr.querySelector('input[type="number"]').dataset.exp;
-    const del = tr.querySelector('input[type="checkbox"]').checked;
-    if (qtyUsed > 0 || del) usedLots.push({ exp, qtyUsed, delete: del });
+  document.querySelectorAll('#usedLotsTable tbody input[type="number"]').forEach(inp=>{
+    const qtyUsed = Number(inp.value)||0; const exp = inp.dataset.exp;
+    if(qtyUsed > 0) usedLots.push({ exp, qtyUsed }); // ไม่มี delete แล้ว
   });
 
+  // ล็อตใหม่ที่ใส่เข้า
   const newLots = [];
   document.querySelectorAll('#newLots [data-type="exp"]').forEach(expEl=>{
     const qtyEl = expEl.closest('.grid').querySelector('[data-type="qty"]');
     const exp = expEl.value; const qty = Number(qtyEl.value)||0;
-    if (exp && qty > 0) newLots.push({ exp, qty });
+    if(exp && qty>0) newLots.push({ exp, qty });
   });
 
-  try {
+  try{
     const res = await apiPost({ box: currentBox, dateVisit, drug, reason, inspector, usedLots, newLots });
-    if (res.ok) {
-      toast(msg, 'บันทึกแล้ว');
-      loadItems(); loadLots(); loadNear();
-      document.getElementById('newLots').innerHTML = '';
-    } else {
-      toast(msg, 'ผิดพลาด: ' + res.error);
+    if(res.ok){
+      toast(msg,'บันทึกแล้ว'); document.getElementById('newLots').innerHTML='';
+      await loadItems(); await loadLots(); await loadNear();
+    }else{
+      toast(msg,'ผิดพลาด: ' + res.error);
     }
-  } catch (e) {
-    toast(msg, 'เชื่อมต่อไม่ได้: ' + (e && e.message ? e.message : e));
-  }
+  }catch(e){ toast(msg,'เชื่อมต่อไม่ได้: ' + (e?.message||e)); }
 }
 
-// ==== Near expiry view ====
-async function loadNear() {
-  if (!currentBox) return;
+// ==== Near expiry ====
+async function loadNear(){
+  if(!currentBox) return;
   const days = Number(document.getElementById('nearDays').value)||90;
-  const data = await apiGet({ action: 'near', box: currentBox, days });
-  const list = document.getElementById('nearList');
-  list.innerHTML = '';
-  const title = document.createElement('div');
-  title.className = 'mb-2 muted';
-  title.textContent = `กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days} วัน`;
-  list.appendChild(title);
+  const data = await apiGet({action:'near', box: currentBox, days});
+  const list = document.getElementById('nearList'); list.innerHTML='';
+  const title = document.createElement('div'); title.className='mb-2 muted';
+  title.textContent = `กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days} วัน`; list.appendChild(title);
   (data.rows||[]).forEach(r=>{
     const el = document.createElement('div');
-    el.className = 'p-3 border rounded flex items-center justify-between';
-    el.innerHTML = `<div><div class="font-medium">${r.drug}</div><div class="muted">EXP: ${r.expISO}</div></div><div class="text-right">Qty: ${r.qty}</div>`;
+    el.className='p-3 border rounded flex items-center justify-between';
+    el.innerHTML = `<div><div class="font-medium">${r.drug}</div><div class="muted">Lot EXP: ${r.expISO}</div></div><div class="text-right">Qty: ${r.qty}</div>`;
     list.appendChild(el);
   });
-  if (!data.rows || !data.rows.length) {
-    const empty = document.createElement('div');
-    empty.className = 'muted';
-    empty.textContent = '— ไม่มีรายการใกล้หมดอายุในช่วงที่กำหนด —';
-    list.appendChild(empty);
+  if(!data.rows||!data.rows.length){
+    const empty=document.createElement('div'); empty.className='muted'; empty.textContent='— ไม่มีรายการใกล้หมดอายุ —'; list.appendChild(empty);
   }
 }
 
@@ -285,17 +280,16 @@ window.addEventListener('DOMContentLoaded', ()=>{
   loadBoxes();
 
   document.getElementById('tab-select').onclick = ()=> switchView('view-select');
-  document.getElementById('tab-form').onclick = ()=> { if (!currentBox) { switchView('view-select'); } else { switchView('view-form'); } };
-  document.getElementById('tab-view').onclick = ()=> { if (!currentBox) { switchView('view-select'); } else { switchView('view-output'); loadNear(); } };
+  document.getElementById('tab-form').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-form'); } };
+  document.getElementById('tab-view').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-output'); loadNear(); } };
 
-  document.getElementById('boxSetBtn').onclick = ()=>{
-    const v = document.getElementById('boxInput').value.trim();
-    if (v) { currentBox = v; localStorage.setItem('em_box', v); setBoxBadge(); loadItems(); loadNear(); switchView('view-form'); }
-  };
-  document.getElementById('boxClearBtn').onclick = ()=>{ localStorage.removeItem('em_box'); currentBox=''; setBoxBadge(); switchView('view-select'); };
+  document.getElementById('boxSetBtn').onclick  = ()=>{ const v=document.getElementById('boxInput').value.trim(); if(v){ currentBox=v; localStorage.setItem('em_box',v); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); } };
+  document.getElementById('boxClearBtn').onclick= ()=>{ localStorage.removeItem('em_box'); currentBox=''; setBoxBadge(); switchView('view-select'); };
 
-  document.getElementById('loadLotsBtn').onclick = loadLots;
-  document.getElementById('clearLotsBtn').onclick = clearLots;
+  document.getElementById('drugSelect').addEventListener('change', ()=>{ document.getElementById('drugCustom').value=''; loadLots(); });
+  document.getElementById('drugCustom').addEventListener('change', loadLots);
+  document.getElementById('refreshLotsBtn').onclick = loadLots;
+
   document.getElementById('addNewLotBtn').onclick = addNewLotRow;
   document.getElementById('submitBtn').onclick = submitData;
   document.getElementById('refreshNearBtn').onclick = loadNear;
