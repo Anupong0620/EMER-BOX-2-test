@@ -139,6 +139,20 @@
   </section>
 </div>
 
+<!-- Modal แจ้งเตือนเพิ่มล็อตก่อนบันทึก -->
+<div id="modalNeedAdd" class="fixed inset-0 bg-black/50 hidden z-50">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-5 w-full max-w-lg">
+      <h3 class="text-lg font-semibold mb-2">ต้องเพิ่มล็อตก่อนบันทึก</h3>
+      <div id="modalNeedAddMsg" class="text-slate-700 mb-4"></div>
+      <div class="flex justify-end gap-2">
+        <button id="modalNeedAddClose" class="btn">ปิด</button>
+        <button id="modalNeedAddGo" class="btn primary">ไปเพิ่มล็อต</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== CONFIG =====
 const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec';
@@ -155,6 +169,19 @@ function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='',
 
 async function apiGet(p){ const url = API_BASE + '?' + new URLSearchParams(p).toString(); const r = await fetch(url); return r.json(); }
 async function apiPost(payload){ const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'text/plain; charset=UTF-8'}, body: JSON.stringify(payload)}); return r.json(); }
+
+// ===== Modal =====
+function openNeedAddModal(htmlMsg) {
+  const m = document.getElementById('modalNeedAdd');
+  document.getElementById('modalNeedAddMsg').innerHTML = htmlMsg;
+  m.classList.remove('hidden');
+  document.getElementById('modalNeedAddClose').onclick = () => m.classList.add('hidden');
+  document.getElementById('modalNeedAddGo').onclick = () => {
+    m.classList.add('hidden');
+    const target = document.getElementById('addExp');
+    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.focus(); }
+  };
+}
 
 // ===== BOXES =====
 async function loadBoxes(){
@@ -265,6 +292,31 @@ async function submitData(){
                     .filter(([exp,qty])=> (Number(qty)||0) > 0)
                     .map(([exp,qty])=>({exp, qtyUsed:Number(qty)}));
 
+  // === ตรวจสอบก่อนส่ง: ใช้ได้จาก (สต็อกจริง + รายการที่จะเพิ่ม) หรือไม่ ===
+  const stockMap = {};
+  (currentLots || []).forEach(l => { stockMap[l.expISO] = (stockMap[l.expISO] || 0) + (Number(l.qty) || 0); });
+
+  const addMap = {};
+  (newLotsPend || []).forEach(n => { addMap[n.exp] = (addMap[n.exp] || 0) + (Number(n.qty) || 0); });
+
+  const insufficient = [];
+  usedLots.forEach(u => {
+    const have = (stockMap[u.exp] || 0) + (addMap[u.exp] || 0);
+    if (u.qtyUsed > have) insufficient.push({ exp: u.exp, want: u.qtyUsed, have });
+  });
+
+  if (insufficient.length) {
+    const list = insufficient
+      .map(x => `<li>Lot EXP: <b>${x.exp}</b> (ต้องใช้ ${x.want} แต่มี/เพิ่มไว้รวม ${x.have})</li>`)
+      .join('');
+    openNeedAddModal(
+      `<p>พบล็อตที่ยังไม่มีในสต็อกหรือปริมาณไม่พอ:</p>
+       <ul class="list-disc pl-5 mt-2">${list}</ul>
+       <p class="mt-3">กรุณาไปที่ส่วน <b>“เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)”</b> แล้วกด <b>+ เพิ่ม</b> ก่อน จากนั้นค่อยบันทึกอีกครั้ง</p>`
+    );
+    return;
+  }
+
   try{
     const res = await apiPost({
       box: currentBox,
@@ -274,7 +326,6 @@ async function submitData(){
     });
     if(res.ok){
       toast(msg,'บันทึกแล้ว');
-      // รีเซ็ต & โหลดใหม่
       useInputs={}; newLotsPend=[]; renderNewList();
       await loadLots(); await loadNear();
     }else{
