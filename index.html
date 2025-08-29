@@ -54,21 +54,33 @@
   <section id="view-form" class="card p-4 hidden">
     <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
 
+    <!-- DASHBOARD: การ์ด 1 และ 3 -->
+    <div id="dashGrid" class="grid md:grid-cols-2 gap-3 mb-4">
+      <div class="p-4 border rounded-lg bg-white">
+        <div class="text-sm muted mb-1">ยาใกล้หมดอายุมากที่สุด</div>
+        <div id="dashSoonest" class="text-base">— ไม่มีข้อมูล —</div>
+      </div>
+      <div class="p-4 border rounded-lg bg-white">
+        <div class="text-sm muted mb-1">สถิตินำกล่องมาที่ห้องยา</div>
+        <div id="dashVisits" class="text-base">— ไม่มีข้อมูล —</div>
+      </div>
+    </div>
+
     <div class="grid md:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm mb-1">วันที่มาที่ห้องยา</label>
         <input type="date" id="dateVisit" class="border rounded px-3 py-2 w-full">
       </div>
       <div>
-       <label class="block text-sm mb-1">ผู้ตรวจสอบ</label>
-<select id="inspector" class="border rounded px-3 py-2 w-full">
-  <option value="">- เลือก -</option>
-  <option>ภญ.พนารัตน์</option>
-  <option>ภญ.พัชรีวรรณ</option>
-  <option>ภก.อนุพงศ์</option>
-  <option>ภญ.อภิญญา</option>
-  <option>ภญ.สุรีวัฒน์</option>
-</select>
+        <label class="block text-sm mb-1">ผู้ตรวจสอบ</label>
+        <select id="inspector" class="border rounded px-3 py-2 w-full">
+          <option value="">- เลือก -</option>
+          <option>ภญ.พนารัตน์</option>
+          <option>ภญ.พัชรีวรรณ</option>
+          <option>ภก.อนุพงศ์</option>
+          <option>ภญ.อภิญญา</option>
+          <option>ภญ.สุรีวัฒน์</option>
+        </select>
       </div>
 
       <!-- เหตุผล -->
@@ -106,7 +118,7 @@
       </div>
     </div>
 
-    <!-- เพิ่มยาเข้าใหม่ (กรณีของเข้า/ต่างวันหมดอายุ) -->
+    <!-- เพิ่มยาเข้าใหม่ -->
     <div class="mt-6">
       <div class="flex items-center justify-between mb-2">
         <h3 class="font-semibold">เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)</h3>
@@ -156,7 +168,7 @@
   <div class="min-h-full flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-5 w-full max-w-sm text-center">
       <h3 class="text-lg font-semibold mb-3">สแกนเพื่อเข้าแอป (หน้าเลือกกล่อง)</h3>
-     <div id="qrBox" class="mb-3 flex justify-center"></div>
+      <div id="qrBox" class="mb-3 flex justify-center"></div>
       <input id="qrLink" class="border rounded px-3 py-2 w-full text-sm mb-3" readonly>
       <div class="flex justify-center gap-2">
         <button id="qrCopy" class="btn">คัดลอกลิงก์</button>
@@ -198,31 +210,19 @@ function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='',
 async function apiGet(p){ const url = API_BASE + '?' + new URLSearchParams(p).toString(); const r = await fetch(url); return r.json(); }
 async function apiPost(payload){ const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'text/plain; charset=UTF-8'}, body: JSON.stringify(payload)}); return r.json(); }
 
-// ===== Deep link: ?view=select เพื่อให้สแกนแล้วเข้าหน้าเลือกกล่อง =====
-function getAppBaseUrl(){
-  // ใช้ path ปัจจุบัน ไม่รวม query/hash
-  return window.location.origin + window.location.pathname.replace(/index\.html?$/,'');
-}
-function getSelectUrl(){
-  const base = getAppBaseUrl();
-  // บางโฮสต์ต้องการมีท้าย / ถ้า deploy เป็น /index.html ก็ได้เช่นกัน
-  return base.endsWith('/') ? (base + '?view=select') : (base + '/?view=select');
-}
+// ===== Deep link: ?view=select =====
+function getAppBaseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
+function getSelectUrl(){ const base = getAppBaseUrl(); return base.endsWith('/') ? (base + '?view=select') : (base + '/?view=select'); }
 function applyDeepLinkDefault(){
   const params = new URLSearchParams(window.location.search);
   const view = (params.get('view')||'').toLowerCase();
-  if (view === 'select') {
-    // บังคับเข้า "หน้าเลือกกล่อง"
-    switchView('view-select');
-    return;
-  }
-  // ถ้าไม่มี view=select: ถ้ามีกล่องค้างไว้ให้ไปหน้า form, ไม่งั้นหน้า select
+  if (view === 'select') { switchView('view-select'); return; }
   if (currentBox) switchView('view-form'); else switchView('view-select');
 }
 
 // ===== QR Modal =====
 function openQR() {
-  const APP_URL = getSelectUrl(); // สแกนแล้วเข้า "หน้าเลือกกล่อง"
+  const APP_URL = getSelectUrl();
   const modal = document.getElementById('qrModal');
   const box   = document.getElementById('qrBox');
   const link  = document.getElementById('qrLink');
@@ -265,7 +265,11 @@ async function loadBoxes(){
   const b = document.getElementById('boxBtns'); b.innerHTML='';
   (data.boxes||['IPD01','ER01','ER02','ER03']).forEach(x=>{
     const btn=document.createElement('button'); btn.className='btn'; btn.textContent=x;
-    btn.onclick=()=>{ currentBox=x; localStorage.setItem('em_box',x); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); };
+    btn.onclick=()=>{ 
+      currentBox=x; localStorage.setItem('em_box',x); setBoxBadge(); 
+      loadItems().then(loadLots); loadNear(); loadDashboard(); 
+      switchView('view-form'); 
+    };
     b.appendChild(btn);
   });
 }
@@ -363,12 +367,10 @@ async function submitData(){
   if(!drug){ toast(msg,'โปรดเลือกยา'); return; }
   if(!reason){ toast(msg,'โปรดระบุเหตุผลที่ใช้'); return; }
 
-  // ใช้ไปจากสเต็ปเปอร์
   const usedLots = Object.entries(useInputs)
                     .filter(([exp,qty])=> (Number(qty)||0) > 0)
                     .map(([exp,qty])=>({exp, qtyUsed:Number(qty)}));
 
-  // ตรวจ: (สต็อกจริง + รายการที่จะเพิ่ม) พอหรือยัง
   const stockMap = {}; (currentLots||[]).forEach(l => { stockMap[l.expISO] = (stockMap[l.expISO] || 0) + (Number(l.qty)||0); });
   const addMap = {}; (newLotsPend||[]).forEach(n => { addMap[n.exp] = (addMap[n.exp] || 0) + (Number(n.qty)||0); });
   const insufficient = [];
@@ -387,7 +389,7 @@ async function submitData(){
     if(res.ok){
       toast(msg,'บันทึกแล้ว');
       useInputs={}; newLotsPend=[]; renderNewList();
-      await loadLots(); await loadNear();
+      await loadLots(); await loadNear(); await loadDashboard();
     }else{
       toast(msg,'ผิดพลาด: ' + res.error);
     }
@@ -415,26 +417,59 @@ async function loadNear(){
   }
 }
 
+// ===== DASHBOARD (การ์ด 1 และ 3) =====
+async function loadDashboard(){
+  if(!currentBox) return;
+  try{
+    const d = await apiGet({action:'dashboard', box: currentBox});
+    renderDashboard(d);
+  }catch(e){ /* เงียบ */ }
+}
+function renderDashboard(d){
+  // การ์ด 1
+  const soonEl = document.getElementById('dashSoonest');
+  if (!d || !d.ok || !d.soonestDate) {
+    soonEl.textContent = '— ไม่มีข้อมูล —';
+  } else {
+    const list = (d.soonest || []).map(x => `${x.drug} (คงเหลือ ${x.qty})`).join(', ');
+    soonEl.innerHTML = `<div class="font-medium">${list}</div><div class="muted">EXP: ${d.soonestDate}</div>`;
+  }
+  // การ์ด 3
+  const visEl = document.getElementById('dashVisits');
+  if (!d || !d.ok) {
+    visEl.textContent = '— ไม่มีข้อมูล —';
+  } else {
+    const v = d.visits || {};
+    const byR = v.byReason || {};
+    const last = v.lastDate || '-';
+    visEl.innerHTML =
+      `<div class="font-medium">${v.total || 0} ครั้ง</div>
+       <div class="muted">ยาใกล้ EXP: ${byR['ยาใกล้ EXP'] || 0} • ใช้ยาในกล่อง: ${byR['ใช้ยาในกล่อง'] || 0} • อื่นๆ/ไม่ระบุ: ${(byR['อื่นๆ']||0)+(byR['ไม่ระบุ']||0)}</div>
+       <div class="muted">ครั้งล่าสุด: ${last}</div>`;
+  }
+}
+
 // ===== EVENTS =====
 window.addEventListener('DOMContentLoaded', ()=>{
-  // init
   setBoxBadge();
   document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
   loadBoxes();
 
-  // tabs
   document.getElementById('tab-select').onclick = ()=> switchView('view-select');
   document.getElementById('tab-form').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-form'); } };
   document.getElementById('tab-view').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-output'); loadNear(); } };
 
-  // choose box
-  document.getElementById('boxSetBtn').onclick  = ()=>{ const v=document.getElementById('boxInput').value.trim(); if(v){ currentBox=v; localStorage.setItem('em_box',v); setBoxBadge(); loadItems().then(loadLots); loadNear(); switchView('view-form'); } };
+  document.getElementById('boxSetBtn').onclick  = ()=>{ 
+    const v=document.getElementById('boxInput').value.trim(); 
+    if(v){ currentBox=v; localStorage.setItem('em_box',v); setBoxBadge(); 
+      loadItems().then(loadLots); loadNear(); loadDashboard(); 
+      switchView('view-form'); 
+    } 
+  };
   document.getElementById('boxClearBtn').onclick= ()=>{ localStorage.removeItem('em_box'); currentBox=''; setBoxBadge(); switchView('view-select'); };
 
-  // drug change
   document.getElementById('drugSelect').addEventListener('change', loadLots);
 
-  // reason other
   document.querySelectorAll('input[name="reason"]').forEach(r=>{
     r.addEventListener('change', ()=>{
       const other = document.getElementById('reasonOther');
@@ -443,25 +478,19 @@ window.addEventListener('DOMContentLoaded', ()=>{
     });
   });
 
-  // add new lots
   document.getElementById('addNewBtn').onclick = addNewLot;
-
-  // submit
   document.getElementById('submitBtn').onclick = submitData;
-
-  // near list
   document.getElementById('refreshNearBtn').onclick = loadNear;
 
-  // QR modal
   document.getElementById('qrBtn').onclick   = openQR;
   document.getElementById('qrClose').onclick = closeQR;
   document.getElementById('qrDL').onclick    = downloadQR;
   document.getElementById('qrCopy').onclick  = copyQRLink;
   document.getElementById('qrModal').addEventListener('click', (e)=>{ if (e.target.id === 'qrModal') closeQR(); });
 
-  // deep link apply
   applyDeepLinkDefault();
 });
 </script>
 </body>
 </html>
+
