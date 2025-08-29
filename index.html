@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Emergency Med Box</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- QR library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
@@ -32,7 +31,6 @@
     </div>
   </header>
 
-  <!-- tabs -->
   <div class="grid md:grid-cols-3 gap-3 mb-4">
     <button id="tab-select" class="btn card text-left">หน้า 1: เลือกกล่องยา</button>
     <button id="tab-form"   class="btn card text-left">หน้า 2: ลงข้อมูล</button>
@@ -54,8 +52,8 @@
   <section id="view-form" class="card p-4 hidden">
     <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
 
-    <!-- DASHBOARD: การ์ด 1 และ 3 -->
-    <div id="dashGrid" class="grid md:grid-cols-2 gap-3 mb-4">
+    <!-- Dashboard (การ์ด 1 & 3) -->
+    <div class="grid md:grid-cols-2 gap-3 mb-4">
       <div class="p-4 border rounded-lg bg-white">
         <div class="text-sm muted mb-1">ยาใกล้หมดอายุมากที่สุด</div>
         <div id="dashSoonest" class="text-base">— ไม่มีข้อมูล —</div>
@@ -83,7 +81,6 @@
         </select>
       </div>
 
-      <!-- เหตุผล -->
       <div class="md:col-span-2">
         <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
         <div class="flex flex-wrap items-center gap-4">
@@ -94,14 +91,12 @@
         </div>
       </div>
 
-      <!-- เลือกยา -->
       <div class="md:col-span-2">
         <label class="block text-sm mb-1">รายการยาที่ใช้ (เลือกจากสต็อกในกล่อง ระบบจะแสดงล็อต/จำนวนด้านล่างอัตโนมัติ)</label>
         <select id="drugSelect" class="border rounded px-3 py-2 w-full"></select>
       </div>
     </div>
 
-    <!-- สต็อก + ใช้ไป -->
     <div class="mt-6">
       <h3 class="font-semibold mb-2">สต็อกปัจจุบันของยานี้</h3>
       <div class="overflow-x-auto">
@@ -118,7 +113,6 @@
       </div>
     </div>
 
-    <!-- เพิ่มยาเข้าใหม่ -->
     <div class="mt-6">
       <div class="flex items-center justify-between mb-2">
         <h3 class="font-semibold">เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)</h3>
@@ -149,7 +143,6 @@
     </div>
   </section>
 
-  <!-- ใกล้หมดอายุ -->
   <section id="view-output" class="card p-4 hidden">
     <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
@@ -163,7 +156,7 @@
   </section>
 </div>
 
-<!-- Modal: QR -->
+<!-- Modal: QR (กึ่งกลาง) -->
 <div id="qrModal" class="fixed inset-0 bg-black/50 hidden z-50">
   <div class="min-h-full flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-5 w-full max-w-sm text-center">
@@ -195,7 +188,7 @@
 
 <script>
 // ===== CONFIG =====
-const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec'; // แทนด้วยของคุณถ้าต่าง
 
 // ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
@@ -208,7 +201,7 @@ function setBoxBadge(){ const el=document.getElementById('boxBadge'); if(current
 function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='', 3000); }
 async function apiGet(p){ const url = API_BASE + '?' + new URLSearchParams(p).toString(); const r = await fetch(url); return r.json(); }
-async function apiPost(payload){ const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'text/plain; charset=UTF-8'}, body: JSON.stringify(payload)}); return r.json(); }
+async function apiPost(payload){ const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)}); return r.json(); }
 
 // ===== Deep link: ?view=select =====
 function getAppBaseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
@@ -417,16 +410,15 @@ async function loadNear(){
   }
 }
 
-// ===== DASHBOARD (การ์ด 1 และ 3) =====
+// ===== DASHBOARD =====
 async function loadDashboard(){
   if(!currentBox) return;
   try{
     const d = await apiGet({action:'dashboard', box: currentBox});
     renderDashboard(d);
-  }catch(e){ /* เงียบ */ }
+  }catch(e){}
 }
 function renderDashboard(d){
-  // การ์ด 1
   const soonEl = document.getElementById('dashSoonest');
   if (!d || !d.ok || !d.soonestDate) {
     soonEl.textContent = '— ไม่มีข้อมูล —';
@@ -434,7 +426,7 @@ function renderDashboard(d){
     const list = (d.soonest || []).map(x => `${x.drug} (คงเหลือ ${x.qty})`).join(', ');
     soonEl.innerHTML = `<div class="font-medium">${list}</div><div class="muted">EXP: ${d.soonestDate}</div>`;
   }
-  // การ์ด 3
+
   const visEl = document.getElementById('dashVisits');
   if (!d || !d.ok) {
     visEl.textContent = '— ไม่มีข้อมูล —';
@@ -488,9 +480,17 @@ window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('qrCopy').onclick  = copyQRLink;
   document.getElementById('qrModal').addEventListener('click', (e)=>{ if (e.target.id === 'qrModal') closeQR(); });
 
+  // deep link apply
   applyDeepLinkDefault();
+
+  // ถ้ามีกล่องค้างอยู่ ให้โหลดข้อมูลทันที
+  if (currentBox) {
+    setBoxBadge();
+    loadItems().then(loadLots);
+    loadNear();
+    loadDashboard();   // สำคัญ
+  }
 });
 </script>
 </body>
 </html>
-
