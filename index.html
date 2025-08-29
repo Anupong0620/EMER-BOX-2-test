@@ -17,10 +17,14 @@
     .stepper{display:flex;align-items:center;gap:.25rem}
     .stepper button{width:32px;height:32px;border:1px solid #e5e7eb;border-radius:.5rem;background:#fff}
     .stepper input{width:72px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.35rem}
+    #apiBanner{display:none}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
 <div class="max-w-5xl mx-auto p-4 md:p-6">
+  <!-- API banner -->
+  <div id="apiBanner" class="mb-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 px-3 py-2 text-sm"></div>
+
   <header class="flex items-center justify-between mb-4">
     <div class="flex items-center gap-2">
       <h1 class="text-2xl font-bold">ระบบตรวจเช็คยาในกล่องยาฉุกเฉิน</h1>
@@ -143,6 +147,7 @@
     </div>
   </section>
 
+  <!-- ใกล้หมดอายุ -->
   <section id="view-output" class="card p-4 hidden">
     <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
@@ -156,7 +161,7 @@
   </section>
 </div>
 
-<!-- Modal: QR (กึ่งกลาง) -->
+<!-- Modal: QR -->
 <div id="qrModal" class="fixed inset-0 bg-black/50 hidden z-50">
   <div class="min-h-full flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-5 w-full max-w-sm text-center">
@@ -188,7 +193,7 @@
 
 <script>
 // ===== CONFIG =====
-const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec'; // แทนด้วยของคุณถ้าต่าง
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec'; // เปลี่ยนเป็นของคุณถ้า URL ต่าง
 
 // ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
@@ -200,67 +205,58 @@ let newLotsPend = [];     // [{exp, qty}]
 function setBoxBadge(){ const el=document.getElementById('boxBadge'); if(currentBox){ el.textContent='กล่อง: '+currentBox; el.classList.remove('hidden'); } else { el.classList.add('hidden'); } }
 function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='', 3000); }
-async function apiGet(p){ const url = API_BASE + '?' + new URLSearchParams(p).toString(); const r = await fetch(url); return r.json(); }
-async function apiPost(payload){ const r = await fetch(API_BASE,{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)}); return r.json(); }
 
-// ===== Deep link: ?view=select =====
-function getAppBaseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
-function getSelectUrl(){ const base = getAppBaseUrl(); return base.endsWith('/') ? (base + '?view=select') : (base + '/?view=select'); }
-function applyDeepLinkDefault(){
-  const params = new URLSearchParams(window.location.search);
-  const view = (params.get('view')||'').toLowerCase();
-  if (view === 'select') { switchView('view-select'); return; }
-  if (currentBox) switchView('view-form'); else switchView('view-select');
-}
-
-// ===== QR Modal =====
-function openQR() {
-  const APP_URL = getSelectUrl();
-  const modal = document.getElementById('qrModal');
-  const box   = document.getElementById('qrBox');
-  const link  = document.getElementById('qrLink');
-  box.innerHTML = '';
-  new QRCode(box, { text: APP_URL, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M });
-  link.value = APP_URL;
-  modal.classList.remove('hidden');
-}
-function closeQR(){ document.getElementById('qrModal').classList.add('hidden'); }
-function downloadQR(){
-  const img = document.querySelector('#qrBox img');
-  const canvas = document.querySelector('#qrBox canvas');
-  const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
-  if (!src) return;
-  const a = document.createElement('a');
-  a.href = src; a.download = 'app-qr.png'; a.click();
-}
-async function copyQRLink(){
-  const v = document.getElementById('qrLink').value;
-  try { await navigator.clipboard.writeText(v); alert('คัดลอกลิงก์แล้ว'); }
-  catch { alert(v); }
+// ✅ แข็งแรงขึ้น: อ่านเป็น text ก่อน แล้วค่อยพยายาม parse JSON
+async function apiGet(p){
+  try{
+    const url = API_BASE + '?' + new URLSearchParams(p).toString();
+    const r   = await fetch(url, { cache: 'no-store' });
+    const txt = await r.text();
+    try{
+      const json = JSON.parse(txt);
+      hideApiBanner();
+      return json;
+    }catch{
+      showApiBanner('⚠️ โหลด API ไม่สำเร็จ (ไม่ได้รับ JSON) — แสดงรายชื่อกล่องดีฟอลต์ชั่วคราว');
+      return { ok:false, error:'Non-JSON', raw:txt };
+    }
+  }catch(e){
+    showApiBanner('⚠️ เชื่อมต่อ API ไม่ได้ — แสดงรายชื่อกล่องดีฟอลต์ชั่วคราว');
+    return { ok:false, error:String(e) };
+  }
 }
 
-// ===== Modal: Need Add =====
-function openNeedAddModal(htmlMsg) {
-  const m = document.getElementById('modalNeedAdd');
-  document.getElementById('modalNeedAddMsg').innerHTML = htmlMsg;
-  m.classList.remove('hidden');
-  document.getElementById('modalNeedAddClose').onclick = () => m.classList.add('hidden');
-  document.getElementById('modalNeedAddGo').onclick = () => {
-    m.classList.add('hidden');
-    const target = document.getElementById('addExp');
-    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.focus(); }
-  };
+function showApiBanner(msg){
+  const b=document.getElementById('apiBanner');
+  b.textContent=msg;
+  b.style.display='block';
+}
+function hideApiBanner(){
+  const b=document.getElementById('apiBanner');
+  b.style.display='none';
+  b.textContent='';
 }
 
 // ===== BOXES =====
 async function loadBoxes(){
   const data = await apiGet({action:'boxes'});
   const b = document.getElementById('boxBtns'); b.innerHTML='';
-  (data.boxes||['IPD01','ER01','ER02','ER03']).forEach(x=>{
-    const btn=document.createElement('button'); btn.className='btn'; btn.textContent=x;
+
+  let boxes = [];
+  if (data && Array.isArray(data.boxes) && data.boxes.length) {
+    boxes = data.boxes;
+  } else {
+    // fallback
+    boxes = ['IPD01','ER01','ER02','ER03'];
+  }
+
+  boxes.forEach(x=>{
+    const btn=document.createElement('button'); 
+    btn.className='btn'; 
+    btn.textContent=x;
     btn.onclick=()=>{ 
       currentBox=x; localStorage.setItem('em_box',x); setBoxBadge(); 
-      loadItems().then(loadLots); loadNear(); loadDashboard(); 
+      loadItems().then(loadLots); loadNear(); loadDashboard();
       switchView('view-form'); 
     };
     b.appendChild(btn);
@@ -398,7 +394,7 @@ async function loadNear(){
   const data = await apiGet({action:'near', box: currentBox, days});
   const list = document.getElementById('nearList'); list.innerHTML='';
   const title=document.createElement('div'); title.className='mb-2 muted';
-  title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days} วัน`;
+  title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days||days} วัน`;
   list.appendChild(title);
   (data.rows||[]).forEach(r=>{
     const el=document.createElement('div'); el.className='p-3 border rounded flex items-center justify-between';
@@ -488,7 +484,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     setBoxBadge();
     loadItems().then(loadLots);
     loadNear();
-    loadDashboard();   // สำคัญ
+    loadDashboard();
   }
 });
 </script>
