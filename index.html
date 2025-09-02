@@ -351,21 +351,41 @@ async function loadDashboard(){
   renderDashboard(d);
 }
 function renderDashboard(d){
-  const soonEl=document.getElementById('dashSoonest');
-  if(!d || !d.ok || !d.soonestDate){ soonEl.textContent='— ไม่มีข้อมูล —'; }
-  else { soonEl.innerHTML = `<div class="font-medium">${d.soonestList}</div><div class="muted">EXP: ${d.soonestDate}</div>`; }
+  const soonEl = document.getElementById('dashSoonest');
+  const visEl  = document.getElementById('dashVisits');
 
-  const visEl=document.getElementById('dashVisits');
-  if(!d || !d.ok){ visEl.textContent='— ไม่มีข้อมูล —'; }
-  else {
-    const v=d.visits||{}; const by=v.byReason||{};
+  // การ์ดซ้าย: ยาใกล้หมดอายุมากที่สุด
+  if (!d || !d.ok || !d.soonestDate) {
+    soonEl.textContent = '— ไม่มีข้อมูล —';
+  } else {
+    // รองรับทั้งชื่อ soonest และ soonestList เผื่อโค้ดเก่า
+    const listArr = d.soonestList || d.soonest || [];
+    const listStr = listArr.length
+      ? listArr.map(x => `${x.drug} (คงเหลือ ${x.qty})`).join(', ')
+      : '— ไม่มีข้อมูล —';
+    soonEl.innerHTML =
+      `<div class="font-medium">${listStr}</div>
+       <div class="muted">EXP: ${d.soonestDate}</div>`;
+  }
+
+  // การ์ดขวา: สถิตินำกล่องมาที่ห้องยา
+  if (!d || !d.ok) {
+    visEl.textContent = '— ไม่มีข้อมูล —';
+  } else {
+    const v   = d.visits || {};
+    const byR = v.byReason || {};
+    const otherOrNA = (byR['อื่นๆ'] || 0) + (byR['ไม่ระบุ'] || 0);
+
     visEl.innerHTML =
-      `<div class="font-medium">${v.total||0} ครั้ง</div>
-       <div class="muted">ยาใกล้ EXP: ${by['ยาใกล้ EXP']||0} • ใช้ยาในกล่อง: ${by['ใช้ยาในกล่อง']||0} • อื่นๆ/ไม่ระบุ: ${by['อื่นๆ/ไม่ระบุ']||0}</div>
-       <div class="muted">ครั้งล่าสุด: ${v.lastDate||'-'}</div>`;
+      `<div class="font-medium">${v.total || 0} ครั้ง</div>
+       <div class="muted">
+         ยาใกล้ EXP: ${byR['ยาใกล้ EXP'] || 0} •
+         ใช้ยาในกล่อง: ${byR['ใช้ยาในกล่อง'] || 0} •
+         อื่นๆ/ไม่ระบุ: ${otherOrNA}
+       </div>
+       <div class="muted">ครั้งล่าสุด: ${v.lastDate || '-'}</div>`;
   }
 }
-
 // ===== Events =====
 window.addEventListener('DOMContentLoaded', ()=>{
   setBoxBadge();
