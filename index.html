@@ -7,72 +7,191 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    /* (เหมือนเดิม) */
+    /* Styling card, button, etc. */
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius:16px; box-shadow: 0 4px 16px rgba(0,0,0,.05); }
+    .btn { border-radius: .5rem; padding: .5rem .9rem; border: 1px solid #e5e7eb; background: #f8fafc; }
+    .btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .muted { color: #64748b; }
+    .chip { background: #eef2ff; border:1px solid #c7d2fe; border-radius:9999px; padding:.25rem .6rem; font-size:.75rem; }
+    thead th { background: #f1f5f9; }
+    .stepper { display:flex; align-items:center; gap:.25rem; }
+    .stepper button { width:32px; height:32px; border:1px solid #e5e7eb; border-radius:.5rem; background:#fff; }
+    .stepper input { width:72px; text-align:center; border:1px solid #e5e7eb; border-radius:.5rem; padding:.35rem; }
+    #apiBanner { display:none; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
-<div class="max-w-5xl mx-auto p-4 md:p-6">
-  <!-- หน้าเลือกกล่อง / ลงข้อมูล เหมือนเดิม... -->
 
-  <!-- หน้าแสดงผล -->
-  <section id="view-output" class="card p-4 hidden">
-    <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-semibold">สรุปการใช้งานกล่องยา</h2>
+  <div class="max-w-5xl mx-auto p-4 md:p-6">
+    <div id="apiBanner" class="mb-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 px-3 py-2 text-sm"></div>
+    <header class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl font-bold">ระบบตรวจเช็คยาในกล่องยาฉุกเฉิน</h1>
+        <span id="boxBadge" class="chip hidden"></span>
+      </div>
+      <button id="qrBtn" class="btn">QR</button>
+    </header>
+
+    <!-- Tabs -->
+    <div class="grid md:grid-cols-3 gap-3 mb-4">
+      <button id="tab-select" class="btn card text-left">หน้า 1: เลือกกล่องยา</button>
+      <button id="tab-form" class="btn card text-left">หน้า 2: ลงข้อมูล</button>
+      <button id="tab-view" class="btn card text-left">หน้าแสดงผล</button>
     </div>
-    <div id="dashboardAll" class="space-y-4"></div>
-  </section>
-</div>
 
-<!-- (QR Modal, Need-add Modal) -->
+    <!-- Page: Select Box -->
+    <section id="view-select" class="card p-4">
+      <h2 class="text-xl font-semibold mb-3">เลือกกล่องยา</h2>
+      <div id="boxBtns" class="flex gap-2 flex-wrap mb-4"></div>
+      <div class="flex items-center gap-2">
+        <input id="boxInput" class="border rounded px-3 py-2 w-48" placeholder="หรือพิมพ์เอง เช่น ER03">
+        <button id="boxSetBtn" class="btn primary">เลือกกล่องนี้</button>
+        <button id="boxClearBtn" class="btn">ล้าง</button>
+      </div>
+    </section>
 
-<script>
-const API_BASE = 'https://script.google.com/macros/s/.../exec';
-let currentBox = localStorage.getItem('em_box') || '';
+    <!-- Page: Input Form -->
+    <section id="view-form" class="card p-4 hidden">
+      <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
+      <div class="grid md:grid-cols-2 gap-3 mb-4">
+        <div class="p-4 border rounded-lg bg-white">
+          <div class="text-sm muted mb-1">ยาใกล้หมดอายุมากที่สุด</div>
+          <div id="dashSoonest" class="text-base">— ไม่มีข้อมูล —</div>
+        </div>
+        <div class="p-4 border rounded-lg bg-white">
+          <div class="text-sm muted mb-1">สถิตินำกล่องมาที่ห้องยา</div>
+          <div id="dashVisits" class="text-base">— ไม่มีข้อมูล —</div>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-1">วันที่มาที่ห้องยา</label>
+          <input type="date" id="dateVisit" class="border rounded px-3 py-2 w-full">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">ผู้ตรวจสอบ</label>
+          <select id="inspector" class="border rounded px-3 py-2 w-full">
+            <option value="">- เลือก -</option>
+            <option>ภญ.พนารัตน์</option>
+            <option>ภญ.พัชรีวรรณ</option>
+            <option>ภก.อนุพงศ์</option>
+            <option>ภญ.อภิญญา</option>
+            <option>ภญ.สุรีวัฒน์</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
+          <div class="flex flex-wrap items-center gap-4">
+            <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ยาใกล้ EXP"> ยาใกล้ EXP</label>
+            <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ใช้ยาในกล่อง" checked> ใช้ยาในกล่อง</label>
+            <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="อื่นๆ"> อื่นๆ</label>
+            <input id="reasonOther" class="border rounded px-3 py-2 w-72 hidden" placeholder="ระบุเหตุผลเพิ่มเติม">
+          </div>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm mb-1">รายการยาที่ใช้</label>
+          <select id="drugSelect" class="border rounded px-3 py-2 w-full"></select>
+        </div>
+      </div>
+      <div class="mt-6">
+        <h3 class="font-semibold mb-2">สต็อกปัจจุบันของยานี้</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border">
+            <thead>
+              <tr>
+                <th class="p-2 border w-48">Lot EXP</th>
+                <th class="p-2 border w-32">จำนวน</th>
+                <th class="p-2 border w-44">จำนวนที่ใช้</th>
+              </tr>
+            </thead>
+            <tbody id="stockBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold">เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)</h3>
+          <div class="muted text-sm">กด “+ เพิ่ม” กรณียาใหม่มีหลายวันหมดอายุ</div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-2">
+          <div>
+            <label class="block text-sm mb-1">วันหมดอายุ (EXP)</label>
+            <input type="date" id="addExp" class="border rounded px-3 py-2 w-full">
+          </div>
+          <div>
+            <label class="block text-sm mb-1">จำนวน</label>
+            <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="เช่น 2">
+          </div>
+          <div class="flex items-end">
+            <button id="addNewBtn" class="btn">+ เพิ่ม</button>
+          </div>
+        </div>
+        <div id="newList" class="mt-3 space-y-2"></div>
+        <div id="newEmpty" class="muted text-sm mt-2">— ยังไม่มีรายการยาเข้าใหม่ —</div>
+      </div>
+      <div class="mt-6 flex gap-2 items-center">
+        <button id="submitBtn" class="btn primary">บันทึก</button>
+        <div id="saveMsg" class="muted"></div>
+      </div>
+    </section>
 
-/* (Helpers, loadBoxes, loadItems, loadLots, addNewLot, submitData, etc.) */
+    <!-- Page: Summary/Dashboard View -->
+    <section id="view-output" class="card p-4 hidden">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-xl font-semibold">สรุปการใช้งานกล่องยา</h2>
+      </div>
+      <div id="dashboardAll" class="space-y-4"></div>
+    </section>
+  </div>
 
-async function loadDashboardAll(){
-  if (!currentBox) return;
-  const d1 = await apiGet({ action: 'dashboard', box: currentBox });
-  const d2 = await apiGet({ action: 'summary_all' });
-  renderDashboardAll(d1, d2);
-}
+  <!-- QR and Need-add Modal omitted for brevity -->
 
-function renderDashboardAll(dBox, dAll){
-  const wrap = document.getElementById('dashboardAll');
-  wrap.innerHTML = '';
+  <script>
+    const API_BASE = 'https://script.google.com/macros/s/YOUR_WEBAPP_ID/exec';
+    let currentBox = localStorage.getItem('em_box') || '';
+    // ... All helper functions, loadBoxes(), loadItems(), loadLots(), renderStockTable(), addNewLot(), submitData(), etc. (same as before)
 
-  // Card: กล่องปัจจุบัน
-  const card1 = document.createElement('div');
-  card1.className = 'p-4 border rounded bg-white';
-  card1.innerHTML = `
-    <div class="font-semibold mb-2">กล่อง ${currentBox}</div>
-    <div class="mb-1">🔹 <b>ยาหมดอายุก่อนที่สุด:</b> ${dBox?.soonestDate || '—'}</div>
-    <div class="mb-1">📦 <b>จำนวนรายการ:</b> ${dBox?.soonest?.length || 0} รายการ</div>
-    <div class="mb-1">📊 <b>ใช้งาน:</b> ${dBox?.visits?.total || 0} ครั้ง (ล่าสุด: ${dBox?.visits?.lastDate || '-'})</div>
-    <div class="muted text-sm">เหตุผล: ยาใกล้ EXP ${dBox?.visits?.byReason?.['ยาใกล้ EXP']||0}, ใช้ยาในกล่อง ${dBox?.visits?.byReason?.['ใช้ยาในกล่อง']||0}, อื่นๆ ${dBox?.visits?.byReason?.['อื่นๆ']||0}</div>
-  `;
-  wrap.appendChild(card1);
+    async function loadDashboardAll(){
+      if (!currentBox) return;
+      const d1 = await apiGet({ action: 'dashboard', box: currentBox });
+      const d2 = await apiGet({ action: 'summary_all' });
+      renderDashboardAll(d1, d2);
+    }
 
-  // Card: รวมทุกกล่อง
-  const card2 = document.createElement('div');
-  card2.className = 'p-4 border rounded bg-white';
-  card2.innerHTML = `
-    <div class="font-semibold mb-2">📋 รวมทุกกล่อง</div>
-    <div class="mb-1">🧾 <b>รวมทั้งหมด:</b> ${dAll?.total || 0} ครั้ง</div>
-    <div class="muted text-sm">เหตุผล: ยาใกล้ EXP ${dAll?.reasons?.['ยาใกล้ EXP']||0}, ใช้ยาในกล่อง ${dAll?.reasons?.['ใช้ยาในกล่อง']||0}, อื่นๆ ${dAll?.reasons?.['อื่นๆ']||0}</div>
-  `;
-  wrap.appendChild(card2);
-}
+    function renderDashboardAll(dBox, dAll){
+      const wrap = document.getElementById('dashboardAll');
+      wrap.innerHTML = '';
 
-window.addEventListener('DOMContentLoaded', () => {
-  /* loadBoxes, setBoxBadge, etc. */
+      const card1 = document.createElement('div');
+      card1.className = 'p-4 border rounded bg-white';
+      card1.innerHTML = `
+        <div class="font-semibold mb-2">กล่อง ${currentBox}</div>
+        <div class="mb-1">🔹 <b>ยาหมดอายุก่อนที่สุด:</b> ${dBox?.soonestDate || '—'}</div>
+        <div class="mb-1">📦 <b>จำนวนรายการ:</b> ${dBox?.soonest?.length || 0} รายการ</div>
+        <div class="mb-1">📊 <b>ใช้งาน:</b> ${dBox?.visits?.total || 0} ครั้ง (ล่าสุด: ${dBox?.visits?.lastDate || '-'})</div>
+        <div class="muted text-sm">เหตุผล: ยาใกล้ EXP ${dBox?.visits?.byReason?.['ยาใกล้ EXP']||0}, ใช้ยาในกล่อง ${dBox?.visits?.byReason?.['ใช้ยาในกล่อง']||0}, อื่นๆ ${dBox?.visits?.byReason?.['อื่นๆ']||0}</div>
+      `;
+      wrap.appendChild(card1);
 
-  document.getElementById('tab-view').onclick = () => {
-    if (!currentBox) { switchView('view-select'); }
-    else { switchView('view-output'); loadDashboardAll(); }
-  };
-});
-</script>
+      const card2 = document.createElement('div');
+      card2.className = 'p-4 border rounded bg-white';
+      card2.innerHTML = `
+        <div class="font-semibold mb-2">📋 รวมทุกกล่อง</div>
+        <div class="mb-1">🧾 <b>รวมทั้งหมด:</b> ${dAll?.total || 0} ครั้ง</div>
+        <div class="muted text-sm">เหตุผล: ยาใกล้ EXP ${dAll?.reasons?.['ยาใกล้ EXP']||0}, ใช้ยาในกล่อง ${dAll?.reasons?.['ใช้ยาในกล่อง']||0}, อื่นๆ ${dAll?.reasons?.['อื่นๆ']||0}</div>
+      `;
+      wrap.appendChild(card2);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setBoxBadge();
+      loadBoxes();
+      document.getElementById('tab-view').onclick = () => {
+        if (!currentBox) { switchView('view-select'); }
+        else { switchView('view-output'); loadDashboardAll(); }
+      };
+      //... remaining event listeners (QR, form etc.)
+    });
+  </script>
 </body>
 </html>
