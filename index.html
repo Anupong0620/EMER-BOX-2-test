@@ -1,143 +1,529 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Emergency Med Box</title>
+
+  <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QR library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
-    .card { background: #fff; border-radius: 1rem; padding: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    .hidden { display: none; }
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+    .btn{border-radius:.5rem;padding:.5rem .9rem;border:1px solid #e5e7eb;background:#f8fafc}
+    .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+    .muted{color:#64748b}
+    .chip{background:#eef2ff;border:1px solid #c7d2fe;border-radius:9999px;padding:.25rem .6rem;font-size:.75rem}
+    thead th{background:#f1f5f9}
+    .stepper{display:flex;align-items:center;gap:.25rem}
+    .stepper button{width:32px;height:32px;border:1px solid #e5e7eb;border-radius:.5rem;background:#fff}
+    .stepper input{width:72px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.35rem}
+    #apiBanner{display:none}
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-slate-50 text-slate-800">
 
-<div class="max-w-4xl mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">ระบบตรวจเช็คยาในกล่องยาฉุกเฉิน</h1>
+<div class="max-w-5xl mx-auto p-4 md:p-6">
+  <!-- API banner -->
+  <div id="apiBanner" class="mb-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 px-3 py-2 text-sm"></div>
 
-  <!-- ปุ่มสลับแท็บ -->
-  <div class="flex gap-2 mb-4">
-    <button onclick="switchTab('select')" class="btn bg-white border px-4 py-2 rounded">หน้า 1: เลือกกล่องยา</button>
-    <button onclick="switchTab('form')" class="btn bg-white border px-4 py-2 rounded">หน้า 2: ลงข้อมูล</button>
-    <button onclick="switchTab('summary')" class="btn bg-white border px-4 py-2 rounded">หน้าแสดงผล</button>
+  <!-- Header -->
+  <header class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-2">
+      <h1 class="text-2xl font-bold">ระบบตรวจเช็คยาในกล่องยาฉุกเฉิน</h1>
+      <span id="boxBadge" class="chip hidden"></span>
+    </div>
+    <button id="qrBtn" class="btn">QR</button>
+  </header>
+
+  <!-- Tabs -->
+  <div class="grid md:grid-cols-3 gap-3 mb-4">
+    <button id="tab-select" class="btn card text-left">หน้า 1: เลือกกล่องยา</button>
+    <button id="tab-form"   class="btn card text-left">หน้า 2: ลงข้อมูล</button>
+    <button id="tab-view"   class="btn card text-left">หน้าแสดงผล</button>
   </div>
 
-  <!-- หน้าเลือกกล่องยา -->
-  <div id="tab-select" class="card mb-4">
-    <h2 class="font-semibold mb-2">เลือกกล่องยา</h2>
-    <input id="boxInput" class="border px-3 py-2 rounded w-64" placeholder="หรือพิมพ์เอง เช่น ER03" />
-    <button onclick="setBox()" class="btn bg-blue-600 text-white px-4 py-2 rounded ml-2">เลือกกล่องนี้</button>
-    <button onclick="clearBox()" class="btn bg-gray-200 px-4 py-2 rounded ml-2">ล้าง</button>
-  </div>
+  <!-- เลือกกล่อง -->
+  <section id="view-select" class="card p-4">
+    <h2 class="text-xl font-semibold mb-3">เลือกกล่องยา</h2>
+    <div id="boxBtns" class="flex gap-2 flex-wrap mb-4"></div>
+    <div class="flex items-center gap-2">
+      <input id="boxInput" class="border rounded px-3 py-2 w-48" placeholder="หรือพิมพ์เอง เช่น ER03">
+      <button id="boxSetBtn" class="btn primary">เลือกกล่องนี้</button>
+      <button id="boxClearBtn" class="btn">ล้าง</button>
+    </div>
+  </section>
 
-  <!-- หน้า dashboard -->
-  <div id="tab-summary" class="card hidden">
-    <h2 class="font-semibold mb-4">หน้าแสดงผล (Dashboard)</h2>
-    
-    <div id="boxInfo" class="mb-4 text-lg font-medium">กล่อง: —</div>
+  <!-- ลงข้อมูล -->
+  <section id="view-form" class="card p-4 hidden">
+    <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
+
+    <!-- Dashboard mini -->
+    <div class="grid md:grid-cols-2 gap-3 mb-4">
+      <div class="p-4 border rounded-lg bg-white">
+        <div class="text-sm muted mb-1">ยาใกล้หมดอายุมากที่สุด</div>
+        <div id="dashSoonest" class="text-base">— ไม่มีข้อมูล —</div>
+      </div>
+      <div class="p-4 border rounded-lg bg-white">
+        <div class="text-sm muted mb-1">สถิตินำกล่องมาที่ห้องยา</div>
+        <div id="dashVisits" class="text-base">— ไม่มีข้อมูล —</div>
+      </div>
+    </div>
 
     <div class="grid md:grid-cols-2 gap-4">
-      <div class="card">
-        <div class="text-sm text-gray-500 mb-1">ยาใกล้หมดอายุมากที่สุดในกล่อง</div>
-        <div id="soonestDrug" class="font-medium">—</div>
-        <div id="soonestExp" class="text-sm text-gray-500">EXP: —</div>
+      <div>
+        <label class="block text-sm mb-1">วันที่มาที่ห้องยา</label>
+        <input type="date" id="dateVisit" class="border rounded px-3 py-2 w-full">
       </div>
-      <div class="card">
-        <div class="text-sm text-gray-500 mb-1">การใช้กล่องนี้ (แยกตามเหตุผล)</div>
-        <div id="boxStats" class="text-sm text-gray-700">—</div>
+      <div>
+        <label class="block text-sm mb-1">ผู้ตรวจสอบ</label>
+        <select id="inspector" class="border rounded px-3 py-2 w-full">
+          <option value="">- เลือก -</option>
+          <option>ภญ.พนารัตน์</option>
+          <option>ภญ.พัชรีวรรณ</option>
+          <option>ภก.อนุพงศ์</option>
+          <option>ภญ.อภิญญา</option>
+          <option>ภญ.สุรีวัฒน์</option>
+        </select>
+      </div>
+
+      <!-- เหตุผล -->
+      <div class="md:col-span-2">
+        <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ยาใกล้ EXP"> ยาใกล้ EXP</label>
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ใช้ยาในกล่อง" checked> ใช้ยาในกล่อง</label>
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="อื่นๆ"> อื่นๆ</label>
+          <input id="reasonOther" class="border rounded px-3 py-2 w-72 hidden" placeholder="ระบุเหตุผลเพิ่มเติม">
+        </div>
+      </div>
+
+      <!-- เลือกยา -->
+      <div class="md:col-span-2">
+        <label class="block text-sm mb-1">รายการยาที่ใช้ (เลือกจากสต็อกในกล่อง ระบบจะแสดงล็อต/จำนวนด้านล่างอัตโนมัติ)</label>
+        <select id="drugSelect" class="border rounded px-3 py-2 w-full"></select>
       </div>
     </div>
 
-    <div class="card mt-6">
-      <h3 class="font-semibold mb-2">สรุปจำนวนการใช้บริการกล่องทั้งหมด</h3>
-      <div id="allStats" class="text-sm text-gray-700">—</div>
+    <!-- สต็อก + ใช้ไป -->
+    <div class="mt-6">
+      <h3 class="font-semibold mb-2">สต็อกปัจจุบันของยานี้</h3>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border">
+          <thead>
+            <tr>
+              <th class="p-2 border w-48">Lot EXP</th>
+              <th class="p-2 border w-32">จำนวน</th>
+              <th class="p-2 border w-44">จำนวนที่ใช้</th>
+            </tr>
+          </thead>
+          <tbody id="stockBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- เพิ่มยาเข้าใหม่ -->
+    <div class="mt-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold">เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)</h3>
+        <div class="muted text-sm">กด “+ เพิ่ม” กรณียาใหม่มีหลายวันหมดอายุ</div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-2">
+        <div>
+          <label class="block text-sm mb-1">วันหมดอายุ (EXP)</label>
+          <input type="date" id="addExp" class="border rounded px-3 py-2 w-full">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">จำนวน</label>
+          <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="เช่น 2">
+        </div>
+        <div class="flex items-end">
+          <button id="addNewBtn" class="btn">+ เพิ่ม</button>
+        </div>
+      </div>
+      <div id="newList" class="mt-3 space-y-2"></div>
+      <div id="newEmpty" class="muted text-sm mt-2">— ยังไม่มีรายการยาเข้าใหม่ —</div>
+    </div>
+
+    <div class="mt-6 flex gap-2 items-center">
+      <button id="submitBtn" class="btn primary">บันทึก</button>
+      <div id="saveMsg" class="muted"></div>
+    </div>
+  </section>
+
+  <!-- หน้าใกล้หมดอายุ -->
+  <section id="view-output" class="card p-4 hidden">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
+      <div>
+        <label class="mr-2 muted">ภายใน (วัน)</label>
+        <input id="nearDays" type="number" min="1" value="90" class="border rounded px-3 py-1 w-24">
+        <button id="refreshNearBtn" class="btn">รีเฟรช</button>
+      </div>
+    </div>
+    <div id="nearList" class="space-y-2"></div>
+  </section>
+</div>
+
+<!-- QR Modal -->
+<div id="qrModal" class="fixed inset-0 bg-black/50 hidden z-50">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-5 w-full max-w-sm text-center">
+      <h3 class="text-lg font-semibold mb-3">สแกนเพื่อเข้าแอป (หน้าเลือกกล่อง)</h3>
+      <div id="qrBox" class="mb-3 flex justify-center"></div>
+      <input id="qrLink" class="border rounded px-3 py-2 w-full text-sm mb-3" readonly>
+      <div class="flex justify-center gap-2">
+        <button id="qrCopy" class="btn">คัดลอกลิงก์</button>
+        <button id="qrDL" class="btn">ดาวน์โหลด QR</button>
+        <button id="qrClose" class="btn">ปิด</button>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- หน้าฟอร์ม (ยังไม่ทำงาน) -->
-  <div id="tab-form" class="card hidden">
-    <h2 class="font-semibold mb-2">หน้านี้สำหรับลงข้อมูล (ยังไม่เปิดใช้งาน)</h2>
+<!-- Need-add Modal -->
+<div id="modalNeedAdd" class="fixed inset-0 bg-black/50 hidden z-50">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-5 w-full max-w-lg">
+      <h3 class="text-lg font-semibold mb-2">ต้องเพิ่มล็อตก่อนบันทึก</h3>
+      <div id="modalNeedAddMsg" class="text-slate-700 mb-4"></div>
+      <div class="flex justify-end gap-2">
+        <button id="modalNeedAddClose" class="btn">ปิด</button>
+        <button id="modalNeedAddGo" class="btn primary">ไปเพิ่มล็อต</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec';
-let currentBox = '';
+/* ===================== CONFIG ===================== */
+// เปลี่ยนเป็น URL /exec ของ Apps Script ของคุณ
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGefh0WQb9SQBlozZzFm3q5iBwzQaY-NtEMZ09HWB602lZSqW/exec';
 
-function switchTab(id) {
-  ['select', 'form', 'summary'].forEach(t => {
-    document.getElementById('tab-' + t).classList.add('hidden');
+/* ===================== STATE ===================== */
+let currentBox  = localStorage.getItem('em_box') || '';
+let currentLots = [];              // [{expISO, qty}]
+let useInputs   = {};              // exp -> qtyUsed
+let newLotsPend = [];              // [{exp, qty}]
+
+/* ===================== HELPERS ===================== */
+function setBoxBadge(){ const el=document.getElementById('boxBadge'); if(currentBox){ el.textContent='กล่อง: '+currentBox; el.classList.remove('hidden'); } else { el.classList.add('hidden'); } }
+function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='', 3200); }
+
+async function apiGet(p){
+  try{
+    const url = API_BASE + '?' + new URLSearchParams(p).toString();
+    const r   = await fetch(url, {cache:'no-store'});
+    const t   = await r.text();
+    const j   = JSON.parse(t);
+    hideApiBanner();
+    return j;
+  }catch(e){
+    showApiBanner('⚠️ เชื่อมต่อ API ไม่ได้');
+    return {};
+  }
+}
+async function apiPost(payload){
+  const r = await fetch(API_BASE,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain; charset=UTF-8'},
+    body: JSON.stringify(payload)
   });
-  document.getElementById('tab-' + id).classList.remove('hidden');
+  return r.json();
+}
+function showApiBanner(msg){ const b=document.getElementById('apiBanner'); b.textContent=msg; b.style.display='block'; }
+function hideApiBanner(){ const b=document.getElementById('apiBanner'); b.style.display='none'; b.textContent=''; }
 
-  // โหลดข้อมูลเมื่อเข้า summary
-  if (id === 'summary') {
-    loadDashboard();
-    loadSummaryAll();
+/* Deep link (?view=select) */
+function getAppBaseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
+function getSelectUrl(){ const base=getAppBaseUrl(); return base.endsWith('/') ? base+'?view=select' : base+'/?view=select'; }
+function applyDeepLinkDefault(){
+  const view=(new URLSearchParams(location.search).get('view')||'').toLowerCase();
+  if(view==='select'){ switchView('view-select'); return; }
+  currentBox ? switchView('view-form') : switchView('view-select');
+}
+
+/* QR modal */
+function openQR(){ const link=getSelectUrl(); const box=document.getElementById('qrBox'); box.innerHTML=''; new QRCode(box,{text:link,width:256,height:256,correctLevel:QRCode.CorrectLevel.M}); document.getElementById('qrLink').value=link; document.getElementById('qrModal').classList.remove('hidden'); }
+function closeQR(){ document.getElementById('qrModal').classList.add('hidden'); }
+function downloadQR(){ const img=document.querySelector('#qrBox img'); const canvas=document.querySelector('#qrBox canvas'); const src=img?img.src:(canvas?canvas.toDataURL('image/png'):null); if(!src) return; const a=document.createElement('a'); a.href=src; a.download='app-qr.png'; a.click(); }
+async function copyQRLink(){ const v=document.getElementById('qrLink').value; try{ await navigator.clipboard.writeText(v); alert('คัดลอกลิงก์แล้ว'); }catch{ alert(v); } }
+
+/* Need-add modal */
+function openNeedAddModal(html){ const m=document.getElementById('modalNeedAdd'); document.getElementById('modalNeedAddMsg').innerHTML=html; m.classList.remove('hidden'); document.getElementById('modalNeedAddClose').onclick=()=>m.classList.add('hidden'); document.getElementById('modalNeedAddGo').onclick=()=>{ m.classList.add('hidden'); const t=document.getElementById('addExp'); if(t){ t.scrollIntoView({behavior:'smooth',block:'center'}); t.focus(); } }; }
+
+/* ===================== BOXES / ITEMS / LOTS ===================== */
+async function loadBoxes(){
+  const data = await apiGet({action:'boxes'});
+  const b = document.getElementById('boxBtns'); b.innerHTML='';
+  (data.boxes || ['IPD01','ER01','ER02','ER03']).forEach(x=>{
+    const btn=document.createElement('button');
+    btn.className='btn';
+    btn.textContent=x;
+    btn.onclick=()=>{
+      currentBox=x;
+      localStorage.setItem('em_box',x);
+      setBoxBadge();
+      loadItems().then(loadLots);
+      loadNear();
+      loadDashboard();
+      switchView('view-form');
+    };
+    b.appendChild(btn);
+  });
+}
+
+async function loadItems(){
+  if(!currentBox) return;
+  useInputs={}; newLotsPend=[]; renderNewList();
+  const data = await apiGet({action:'items', box: currentBox});
+  const sel = document.getElementById('drugSelect'); sel.innerHTML='';
+  const o0=document.createElement('option'); o0.value=''; o0.textContent='- เลือกยา -'; sel.appendChild(o0);
+  (data.items||[]).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
+}
+
+function makeStepper(exp, maxQty){
+  const wrap=document.createElement('div'); wrap.className='stepper';
+  const minus=document.createElement('button'); minus.type='button'; minus.textContent='−';
+  const input=document.createElement('input'); input.type='number'; input.min='0'; input.max=String(maxQty); input.value=String(useInputs[exp]||0);
+  const plus=document.createElement('button'); plus.type='button'; plus.textContent='+';
+  const clamp=()=>{ let v=Number(input.value)||0; if(v<0)v=0; if(v>maxQty)v=maxQty; input.value=String(v); useInputs[exp]=v; };
+  minus.onclick=()=>{ input.value=String(Math.max(0,(Number(input.value)||0)-1)); clamp(); };
+  plus.onclick =()=>{ input.value=String(Math.min(maxQty,(Number(input.value)||0)+1)); clamp(); };
+  input.oninput=clamp;
+  wrap.append(minus,input,plus);
+  return wrap;
+}
+
+function renderStockTable(){
+  const tb=document.getElementById('stockBody'); tb.innerHTML='';
+  if(!currentLots.length){
+    const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=3; td.className='border p-3 muted'; td.textContent='— ไม่มีล็อตในสต็อกของยานี้ —'; tr.appendChild(td); tb.appendChild(tr); return;
   }
+  currentLots.forEach(l=>{
+    const tr=document.createElement('tr');
+    const c1=document.createElement('td'); c1.className='border p-2'; c1.textContent=l.expISO||'-';
+    const c2=document.createElement('td'); c2.className='border p-2 text-right'; c2.textContent=l.qty;
+    const c3=document.createElement('td'); c3.className='border p-2'; c3.appendChild(makeStepper(l.expISO,l.qty));
+    tr.append(c1,c2,c3); tb.appendChild(tr);
+  });
 }
 
-function setBox() {
-  const input = document.getElementById('boxInput').value.trim();
-  if (!input) return alert('กรุณาระบุชื่อกล่อง');
-  currentBox = input.toUpperCase();
-  document.getElementById('boxInfo').textContent = `กล่อง: ${currentBox}`;
-  switchTab('summary');
+async function loadLots(){
+  const drug = document.getElementById('drugSelect').value.trim();
+  useInputs={}; newLotsPend=[]; renderNewList();
+  if(!currentBox || !drug){ currentLots=[]; renderStockTable(); return; }
+  const data = await apiGet({action:'lots', box: currentBox, drug});
+  currentLots = data.lots || [];
+  renderStockTable();
 }
 
-function clearBox() {
-  currentBox = '';
-  document.getElementById('boxInput').value = '';
-  switchTab('select');
+/* ===================== NEW LOTS ===================== */
+function renderNewList(){
+  const wrap=document.getElementById('newList');
+  const empty=document.getElementById('newEmpty');
+  wrap.innerHTML='';
+  if(!newLotsPend.length){ empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  newLotsPend.forEach((n,idx)=>{
+    const row=document.createElement('div');
+    row.className='flex items-center justify-between p-2 border rounded bg-white';
+    row.innerHTML=`<div>EXP: <span class="font-medium">${n.exp}</span> — จำนวน: <span class="font-medium">${n.qty}</span></div>`;
+    const del=document.createElement('button'); del.className='btn'; del.textContent='ลบ';
+    del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); };
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+}
+function addNewLot(){
+  const exp=(document.getElementById('addExp').value||'').trim();
+  const qty=Math.max(0, Number(document.getElementById('addQty').value)||0);
+  if(!exp){ alert('โปรดระบุวันหมดอายุ'); return; }
+  if(qty<=0){ alert('โปรดระบุจำนวน (>0)'); return; }
+  newLotsPend.push({exp, qty});
+  renderNewList();
+  document.getElementById('addExp').value='';
+  document.getElementById('addQty').value='';
 }
 
-// ========== โหลด Dashboard ==========
+/* ===================== SUBMIT ===================== */
+function getReason(){ const r=document.querySelector('input[name="reason"]:checked'); if(!r) return ''; if(r.value==='อื่นๆ') return document.getElementById('reasonOther').value.trim(); return r.value; }
 
-async function loadDashboard() {
-  if (!currentBox) return;
+async function submitData(){
+  const msg=document.getElementById('saveMsg');
+  const dateVisit=document.getElementById('dateVisit').value || new Date().toISOString().slice(0,10);
+  const inspector=document.getElementById('inspector').value || '';
+  const reason=getReason();
+  const drug=document.getElementById('drugSelect').value.trim();
 
-  try {
-    const r = await fetch(`${API_URL}?action=dashboard&box=${currentBox}`);
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'โหลด dashboard ไม่สำเร็จ');
+  if(!currentBox){ toast(msg,'ยังไม่ได้เลือกกล่อง'); return; }
+  if(!drug){ toast(msg,'โปรดเลือกยา'); return; }
+  if(!reason){ toast(msg,'โปรดระบุเหตุผลที่ใช้'); return; }
 
-    // ยาใกล้หมด
-    if (j.soonest && j.soonest.length > 0) {
-      const list = j.soonest.map(d => `${d.drug} (${d.qty})`).join(', ');
-      document.getElementById('soonestDrug').textContent = list;
-      document.getElementById('soonestExp').textContent = 'EXP: ' + j.soonestDate;
-    } else {
-      document.getElementById('soonestDrug').textContent = '— ไม่มีข้อมูล —';
-      document.getElementById('soonestExp').textContent = '';
+  const usedLots = Object.entries(useInputs)
+                    .filter(([exp,qty])=> (Number(qty)||0) > 0)
+                    .map(([exp,qty])=>({exp, qtyUsed:Number(qty)}));
+
+  // ตรวจว่า (สต็อกจริง + รายการที่จะเพิ่ม) พอหรือยัง
+  const stockMap = {}; (currentLots||[]).forEach(l => { stockMap[l.expISO] = (stockMap[l.expISO] || 0) + (Number(l.qty)||0); });
+  const addMap = {}; (newLotsPend||[]).forEach(n => { addMap[n.exp] = (addMap[n.exp] || 0) + (Number(n.qty)||0); });
+  const insufficient = [];
+  usedLots.forEach(u => {
+    const have = (stockMap[u.exp] || 0) + (addMap[u.exp] || 0);
+    if (u.qtyUsed > have) insufficient.push({ exp: u.exp, want: u.qtyUsed, have });
+  });
+  if (insufficient.length) {
+    const list = insufficient.map(x => `<li>Lot EXP: <b>${x.exp}</b> (ต้องใช้ ${x.want} แต่มี/เพิ่มไว้รวม ${x.have})</li>`).join('');
+    openNeedAddModal(`<p>พบล็อตที่ยังไม่มีในสต็อกหรือปริมาณไม่พอ:</p><ul class="list-disc pl-5 mt-2">${list}</ul><p class="mt-3">กรุณาไปที่ส่วน <b>“เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)”</b> แล้วกด <b>+ เพิ่ม</b> ก่อน จากนั้นค่อยบันทึกอีกครั้ง</p>`);
+    return;
+  }
+
+  try{
+    const res = await apiPost({
+      box: currentBox,
+      dateVisit,
+      drug,
+      reason,
+      inspector,
+      usedLots,
+      newLots: newLotsPend
+    });
+    if(res && res.ok){
+      toast(msg,'บันทึกแล้ว');
+      useInputs={}; newLotsPend=[]; renderNewList();
+      await loadLots(); await loadNear(); await loadDashboard();
+    }else{
+      toast(msg,'ผิดพลาด: ' + (res && res.error ? res.error : 'ไม่ทราบสาเหตุ'));
     }
-
-    // การใช้งาน
-    const v = j.visits || {}, by = v.byReason || {};
-    document.getElementById('boxStats').innerHTML =
-      `<b>${v.total || 0} ครั้ง</b> — ยาใกล้ EXP: ${by['ยาใกล้ EXP'] || 0}, ใช้ยาในกล่อง: ${by['ใช้ยาในกล่อง'] || 0}, อื่นๆ/ไม่ระบุ: ${(by['อื่นๆ'] || 0) + (by['ไม่ระบุ'] || 0)}<br>
-       ครั้งล่าสุด: ${v.lastDate || '-'}`;
-  } catch (err) {
-    alert('โหลด Dashboard ไม่สำเร็จ: ' + err.message);
+  }catch(e){
+    toast(msg,'เชื่อมต่อไม่ได้: ' + (e?.message||e));
   }
 }
 
-async function loadSummaryAll() {
-  try {
-    const r = await fetch(`${API_URL}?action=summary_all`);
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'โหลด summary_all ไม่สำเร็จ');
+/* ===================== NEAR PAGE ===================== */
+async function loadNear(){
+  if(!currentBox) return;
+  const days = Number(document.getElementById('nearDays').value)||90;
+  const data = await apiGet({action:'near', box: currentBox, days});
+  const list = document.getElementById('nearList'); list.innerHTML='';
+  const title=document.createElement('div'); title.className='mb-2 muted';
+  title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days||days} วัน`;
+  list.appendChild(title);
 
-    const reasons = j.reasons || {};
-    document.getElementById('allStats').innerHTML =
-      `<b>รวมทั้งหมด ${j.total || 0} ครั้ง</b><br>
-       ยาใกล้ EXP: ${reasons['ยาใกล้ EXP'] || 0}<br>
-       ใช้ยาในกล่อง: ${reasons['ใช้ยาในกล่อง'] || 0}<br>
-       อื่นๆ: ${reasons['อื่นๆ'] || 0}`;
-  } catch (err) {
-    document.getElementById('allStats').textContent = 'โหลดข้อมูล summary ไม่ได้';
+  (data.rows||[]).forEach(r=>{
+    const el=document.createElement('div'); el.className='p-3 border rounded flex items-center justify-between';
+    el.innerHTML = `<div><div class="font-medium">${r.drug}</div><div class="muted">Lot EXP: ${r.expISO}</div></div><div class="text-right">จำนวน: ${r.qty}</div>`;
+    list.appendChild(el);
+  });
+  if(!data.rows || !data.rows.length){
+    const empty=document.createElement('div'); empty.className='muted'; empty.textContent='— ไม่มีรายการใกล้หมดอายุ —';
+    list.appendChild(empty);
   }
 }
+
+/* ===================== DASHBOARD ===================== */
+async function loadDashboard(){
+  if(!currentBox) return;
+  const d = await apiGet({action:'dashboard', box: currentBox});
+  renderDashboard(d);
+}
+function renderDashboard(d){
+  // การ์ด 1: ยาใกล้หมดอายุมากที่สุด
+  const soonEl=document.getElementById('dashSoonest');
+  if(!d || !d.ok || !d.soonestDate){
+    soonEl.textContent='— ไม่มีข้อมูล —';
+  }else{
+    const list = (d.soonest||[]).map(x => `${x.drug} (คงเหลือ ${x.qty})`).join(', ');
+    soonEl.innerHTML = `<div class="font-medium">${list}</div><div class="muted">EXP: ${d.soonestDate}</div>`;
+  }
+
+  // การ์ด 2: สถิตินำกล่องมาห้องยา
+  const visEl=document.getElementById('dashVisits');
+  if(!d || !d.ok){
+    visEl.textContent='— ไม่มีข้อมูล —';
+  }else{
+    const v = d.visits || {};
+    const by = v.byReason || {};
+    const last = v.lastDate || '-';
+    visEl.innerHTML =
+      `<div class="font-medium">${v.total || 0} ครั้ง</div>
+       <div class="muted">ยาใกล้ EXP: ${by['ยาใกล้ EXP']||0} • ใช้ยาในกล่อง: ${by['ใช้ยาในกล่อง']||0} • อื่นๆ/ไม่ระบุ: ${(by['อื่นๆ']||0)+(by['ไม่ระบุ']||0)}</div>
+       <div class="muted">ครั้งล่าสุด: ${last}</div>`;
+  }
+}
+
+/* ===================== EVENTS ===================== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  // init
+  setBoxBadge();
+  document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
+  loadBoxes();
+
+  // tabs
+  document.getElementById('tab-select').onclick = ()=> switchView('view-select');
+  document.getElementById('tab-form').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-form'); } };
+  document.getElementById('tab-view').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-output'); loadNear(); } };
+
+  // choose box
+  document.getElementById('boxSetBtn').onclick  = ()=>{
+    const v=document.getElementById('boxInput').value.trim();
+    if(v){
+      currentBox=v.toUpperCase();
+      localStorage.setItem('em_box',currentBox);
+      setBoxBadge();
+      loadItems().then(loadLots);
+      loadNear();
+      loadDashboard();
+      switchView('view-form');
+    }
+  };
+  document.getElementById('boxClearBtn').onclick= ()=>{
+    localStorage.removeItem('em_box');
+    currentBox='';
+    setBoxBadge();
+    switchView('view-select');
+  };
+
+  // drug change
+  document.getElementById('drugSelect').addEventListener('change', loadLots);
+
+  // reason other toggle
+  document.querySelectorAll('input[name="reason"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const other = document.getElementById('reasonOther');
+      if(r.value==='อื่นๆ' && r.checked){ other.classList.remove('hidden'); other.focus(); }
+      else if(r.value!=='อื่นๆ'){ other.classList.add('hidden'); other.value=''; }
+    });
+  });
+
+  // add / submit buttons
+  document.getElementById('addNewBtn').onclick = addNewLot;
+  document.getElementById('submitBtn').onclick = submitData;
+
+  // near list refresh
+  document.getElementById('refreshNearBtn').onclick = loadNear;
+
+  // QR modal
+  document.getElementById('qrBtn').onclick   = openQR;
+  document.getElementById('qrClose').onclick = closeQR;
+  document.getElementById('qrDL').onclick    = downloadQR;
+  document.getElementById('qrCopy').onclick  = copyQRLink;
+  document.getElementById('qrModal').addEventListener('click', (e)=>{ if (e.target.id === 'qrModal') closeQR(); });
+
+  // deep-link enter
+  applyDeepLinkDefault();
+
+  // if box is already set
+  if (currentBox) {
+    setBoxBadge();
+    loadItems().then(loadLots);
+    loadNear();
+    loadDashboard();
+  }
+});
 </script>
-
 </body>
 </html>
