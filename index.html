@@ -150,7 +150,7 @@
       <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
       <div>
         <label class="mr-2 muted">ภายใน (วัน)</label>
-        <input id="nearDays" type="number" min="1" value="90" class="border rounded px-3 py-1 w-24">
+        <input id="nearDays" type="number" min="1" value="1000" class="border rounded px-3 py-1 w-24">
         <button id="refreshNearBtn" class="btn">รีเฟรช</button>
       </div>
     </div>
@@ -343,7 +343,7 @@ function getReason(){ const r=document.querySelector('input[name="reason"]:check
 
 async function loadNear(){
   if(!currentBox) return;
-  const days = Number(document.getElementById('nearDays').value)||90;
+  const days = Number(document.getElementById('nearDays').value)||1000;
   const data = await apiGet({action:'near', box: currentBox, days});
   const list=document.getElementById('nearList'); list.innerHTML='';
   const title=document.createElement('div'); title.className='mb-2 muted'; title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days||days} วัน`; list.appendChild(title);
