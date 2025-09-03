@@ -426,35 +426,46 @@ async function loadNear(){
 
 /* ===================== DASHBOARD ===================== */
 async function loadDashboard(){
-  if(!currentBox) return;
-  const d = await apiGet({action:'dashboard', box: currentBox});
-  renderDashboard(d);
-}
-function renderDashboard(d){
-  // การ์ด 1: ยาใกล้หมดอายุมากที่สุด
-  const soonEl=document.getElementById('dashSoonest');
-  if(!d || !d.ok || !d.soonestDate){
-    soonEl.textContent='— ไม่มีข้อมูล —';
-  }else{
-    const list = (d.soonest||[]).map(x => `${x.drug} (คงเหลือ ${x.qty})`).join(', ');
-    soonEl.innerHTML = `<div class="font-medium">${list}</div><div class="muted">EXP: ${d.soonestDate}</div>`;
-  }
+  if(!currentBox) return;
+  const dashEl = document.getElementById('dashSoonest');
+  const visitsEl = document.getElementById('dashVisits');
 
-  // การ์ด 2: สถิตินำกล่องมาห้องยา
-  const visEl=document.getElementById('dashVisits');
-  if(!d || !d.ok){
-    visEl.textContent='— ไม่มีข้อมูล —';
-  }else{
-    const v = d.visits || {};
-    const by = v.byReason || {};
-    const last = v.lastDate || '-';
-    visEl.innerHTML =
-      `<div class="font-medium">${v.total || 0} ครั้ง</div>
-       <div class="muted">ยาใกล้ EXP: ${by['ยาใกล้ EXP']||0} • ใช้ยาในกล่อง: ${by['ใช้ยาในกล่อง']||0} • อื่นๆ/ไม่ระบุ: ${(by['อื่นๆ']||0)+(by['ไม่ระบุ']||0)}</div>
-       <div class="muted">ครั้งล่าสุด: ${last}</div>`;
-  }
-}
+  // Clear old data
+  dashEl.innerHTML = 'กำลังโหลด...';
+  visitsEl.innerHTML = 'กำลังโหลด...';
 
+  const data = await apiGet({action:'dashboard', box: currentBox});
+  if(!data.ok){
+    dashEl.textContent = '❌ โหลดข้อมูลไม่ได้';
+    visitsEl.textContent = '❌ โหลดข้อมูลไม่ได้';
+    return;
+  }
+
+  // 1. Display soonest expiry drugs
+  if(data.soonest && data.soonest.length > 0){
+    const date = data.soonestDate ? data.soonestDate.split('-').reverse().join('/') : '';
+    const list = data.soonest.map(d => `${d.drug} (${d.qty})`).join(', ');
+    dashEl.innerHTML = `<span class="text-lg font-bold">${list}</span><div class="text-sm text-slate-500">วันหมดอายุ: ${date}</div>`;
+  } else {
+    dashEl.textContent = '— ไม่มีข้อมูล —';
+  }
+
+  // 2. Display visits summary
+  const v = data.visits || {};
+  if(v.total){
+    const reason = v.byReason;
+    const lastDate = v.lastDate ? v.lastDate.split('-').reverse().join('/') : '';
+    visitsEl.innerHTML = `
+      ${v.total} ครั้ง
+      <div class="text-sm muted mt-1">
+        ยาใกล้ EXP: ${reason['ยาใกล้ EXP']} • ใช้ยาในกล่อง: ${reason['ใช้ยาในกล่อง']} • อื่นๆ/ไม่ระบุ: ${reason['อื่นๆ'] + reason['ไม่ระบุ']}
+      </div>
+      <div class="text-sm muted">ครั้งล่าสุด: ${lastDate || '-'}</div>
+    `;
+  } else {
+    visitsEl.textContent = '0 ครั้ง';
+  }
+}
 /* ===================== EVENTS ===================== */
 window.addEventListener('DOMContentLoaded', ()=>{
   // init
