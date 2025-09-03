@@ -1,12 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Emergency Med Box</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card { background: #fff; border-radius: 1rem; padding: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+    .hidden { display: none; }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -14,6 +15,7 @@
 <div class="max-w-4xl mx-auto p-4">
   <h1 class="text-2xl font-bold mb-4">ระบบตรวจเช็คยาในกล่องยาฉุกเฉิน</h1>
 
+  <!-- ปุ่มสลับแท็บ -->
   <div class="flex gap-2 mb-4">
     <button onclick="switchTab('select')" class="btn bg-white border px-4 py-2 rounded">หน้า 1: เลือกกล่องยา</button>
     <button onclick="switchTab('form')" class="btn bg-white border px-4 py-2 rounded">หน้า 2: ลงข้อมูล</button>
@@ -23,7 +25,7 @@
   <!-- หน้าเลือกกล่องยา -->
   <div id="tab-select" class="card mb-4">
     <h2 class="font-semibold mb-2">เลือกกล่องยา</h2>
-    <input id="boxInput" class="border px-3 py-2 rounded w-64" placeholder="หรือพิมพ์เอง เช่น ER03">
+    <input id="boxInput" class="border px-3 py-2 rounded w-64" placeholder="หรือพิมพ์เอง เช่น ER03" />
     <button onclick="setBox()" class="btn bg-blue-600 text-white px-4 py-2 rounded ml-2">เลือกกล่องนี้</button>
     <button onclick="clearBox()" class="btn bg-gray-200 px-4 py-2 rounded ml-2">ล้าง</button>
   </div>
@@ -32,7 +34,7 @@
   <div id="tab-summary" class="card hidden">
     <h2 class="font-semibold mb-4">หน้าแสดงผล (Dashboard)</h2>
     
-    <div id="boxInfo" class="mb-4 text-lg font-medium"></div>
+    <div id="boxInfo" class="mb-4 text-lg font-medium">กล่อง: —</div>
 
     <div class="grid md:grid-cols-2 gap-4">
       <div class="card">
@@ -52,6 +54,10 @@
     </div>
   </div>
 
+  <!-- หน้าฟอร์ม (ยังไม่ทำงาน) -->
+  <div id="tab-form" class="card hidden">
+    <h2 class="font-semibold mb-2">หน้านี้สำหรับลงข้อมูล (ยังไม่เปิดใช้งาน)</h2>
+  </div>
 </div>
 
 <script>
@@ -64,6 +70,7 @@ function switchTab(id) {
   });
   document.getElementById('tab-' + id).classList.remove('hidden');
 
+  // โหลดข้อมูลเมื่อเข้า summary
   if (id === 'summary') {
     loadDashboard();
     loadSummaryAll();
@@ -84,14 +91,15 @@ function clearBox() {
   switchTab('select');
 }
 
-// ========== LOAD DASHBOARD ==========
+// ========== โหลด Dashboard ==========
+
 async function loadDashboard() {
   if (!currentBox) return;
 
   try {
     const r = await fetch(`${API_URL}?action=dashboard&box=${currentBox}`);
     const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'ไม่สามารถโหลดข้อมูลกล่องได้');
+    if (!j.ok) throw new Error(j.error || 'โหลด dashboard ไม่สำเร็จ');
 
     // ยาใกล้หมด
     if (j.soonest && j.soonest.length > 0) {
@@ -109,7 +117,7 @@ async function loadDashboard() {
       `<b>${v.total || 0} ครั้ง</b> — ยาใกล้ EXP: ${by['ยาใกล้ EXP'] || 0}, ใช้ยาในกล่อง: ${by['ใช้ยาในกล่อง'] || 0}, อื่นๆ/ไม่ระบุ: ${(by['อื่นๆ'] || 0) + (by['ไม่ระบุ'] || 0)}<br>
        ครั้งล่าสุด: ${v.lastDate || '-'}`;
   } catch (err) {
-    alert('ผิดพลาด: ' + err.message);
+    alert('โหลด Dashboard ไม่สำเร็จ: ' + err.message);
   }
 }
 
@@ -117,7 +125,8 @@ async function loadSummaryAll() {
   try {
     const r = await fetch(`${API_URL}?action=summary_all`);
     const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'โหลดสรุปทั้งหมดไม่สำเร็จ');
+    if (!j.ok) throw new Error(j.error || 'โหลด summary_all ไม่สำเร็จ');
+
     const reasons = j.reasons || {};
     document.getElementById('allStats').innerHTML =
       `<b>รวมทั้งหมด ${j.total || 0} ครั้ง</b><br>
@@ -125,7 +134,7 @@ async function loadSummaryAll() {
        ใช้ยาในกล่อง: ${reasons['ใช้ยาในกล่อง'] || 0}<br>
        อื่นๆ: ${reasons['อื่นๆ'] || 0}`;
   } catch (err) {
-    document.getElementById('allStats').textContent = 'โหลดข้อมูลไม่ได้';
+    document.getElementById('allStats').textContent = 'โหลดข้อมูล summary ไม่ได้';
   }
 }
 </script>
