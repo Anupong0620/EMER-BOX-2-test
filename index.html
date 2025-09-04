@@ -34,7 +34,7 @@
   </header>
 
   <div class="grid md:grid-cols-2 gap-3 mb-4">
-    <button id="tab-form" class="btn card text-left">หน้า 2: ลงข้อมูล</button>
+    <button id="tab-form" class="btn card text-left">ลงข้อมูล</button>
     <button id="tab-view" class="btn card text-left">หน้าแสดงผล</button>
   </div>
 
@@ -42,7 +42,7 @@
   <section id="view-form" class="card p-4">
     <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
 
-    <!-- เลือกกล่องยา (ย้ายมาหน้านี้) -->
+    <!-- เลือกกล่อง (อยู่หน้า 2 ด้วย) -->
     <div class="grid md:grid-cols-2 gap-4 mb-4">
       <div>
         <label class="block text-sm mb-1">เลือกกล่องยา</label>
@@ -100,7 +100,7 @@
       </div>
     </div>
 
-    <!-- เพิ่มยาเข้าใหม่ -->
+    <!-- เพิ่มเข้าใหม่ -->
     <div class="mt-6">
       <div class="flex items-center justify-between mb-2">
         <h3 class="font-semibold">เพิ่มยาเข้าใหม่ (ใส่เข้ากล่อง)</h3>
@@ -129,12 +129,14 @@
     </div>
   </section>
 
-  <!-- หน้าแสดงใกล้หมดอายุ -->
+  <!-- แสดงผล / เลือกกล่องได้ + วันล่วงหน้า -->
   <section id="view-output" class="card p-4 hidden">
-    <div class="flex items-center justify-between mb-2">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-2">
       <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
-      <div>
-        <label class="mr-2 muted">ภายใน (วัน)</label>
+      <div class="flex items-center gap-2 flex-wrap">
+        <label class="muted">กล่อง</label>
+        <select id="boxPickerView" class="border rounded px-2 py-1"></select>
+        <label class="muted ml-2">ภายใน (วัน)</label>
         <input id="nearDays" type="number" min="1" value="1000" class="border rounded px-3 py-1 w-24">
         <button id="refreshNearBtn" class="btn">รีเฟรช</button>
       </div>
@@ -201,7 +203,6 @@ async function apiPost(payload){
 }
 function showApiBanner(msg){ const b=document.getElementById('apiBanner'); b.textContent=msg; b.style.display='block'; }
 function hideApiBanner(){ const b=document.getElementById('apiBanner'); b.style.display='none'; b.textContent=''; }
-
 function baseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
 
 // QR
@@ -214,23 +215,34 @@ async function copyQRLink(){ const v=document.getElementById('qrLink').value; tr
 function openNeedAddModal(html){ const m=document.getElementById('modalNeedAdd'); document.getElementById('modalNeedAddMsg').innerHTML=html; m.classList.remove('hidden'); document.getElementById('modalNeedAddClose').onclick=()=>m.classList.add('hidden'); document.getElementById('modalNeedAddGo').onclick=()=>{ m.classList.add('hidden'); const t=document.getElementById('addExp'); if(t){ t.scrollIntoView({behavior:'smooth',block:'center'}); t.focus(); } }; }
 
 // ===== Boxes / Items / Lots =====
+function fillBoxPickers(boxes){
+  // หน้า 2
+  const f = document.getElementById('boxPicker'); f.innerHTML='';
+  // หน้าแสดงผล
+  const v = document.getElementById('boxPickerView'); v.innerHTML='';
+
+  boxes.forEach(x=>{
+    const of=document.createElement('option'); of.value=x; of.textContent=x; f.appendChild(of);
+    const ov=document.createElement('option'); ov.value=x; ov.textContent=x; v.appendChild(ov);
+  });
+
+  f.value = currentBox;
+  v.value = currentBox;
+}
+
 async function loadBoxes(){
   const data = await apiGet({action:'boxes'});
   const boxes = data.boxes || ['IPD01','ER01','ER02','ER03'];
-  const sel = document.getElementById('boxPicker');
-  sel.innerHTML = '';
-  boxes.forEach(x=>{
-    const o=document.createElement('option'); o.value=x; o.textContent=x; sel.appendChild(o);
-  });
 
   // ตั้งค่ากล่องเริ่มต้น: ?box=.. > localStorage > รายการแรก
   const urlBox = (new URLSearchParams(location.search).get('box')||'').trim();
   if(urlBox && boxes.includes(urlBox)) currentBox = urlBox;
   if(!currentBox) currentBox = boxes[0];
 
-  sel.value = currentBox;
+  fillBoxPickers(boxes);
   localStorage.setItem('em_box', currentBox);
   setBoxBadge();
+
   await loadItems(); await loadLots(); await loadNear();
 }
 
@@ -354,18 +366,29 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   setBoxBadge();
   document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
 
-  // load boxes แล้วตั้งค่ากล่องเริ่มต้น + โหลดข้อมูล
   await loadBoxes();
 
   // tab
-  document.getElementById('tab-form').onclick   = ()=> switchView('view-form');
-  document.getElementById('tab-view').onclick   = ()=> { switchView('view-output'); loadNear(); };
+  document.getElementById('tab-form').onclick = ()=> switchView('view-form');
+  document.getElementById('tab-view').onclick = ()=> { switchView('view-output'); loadNear(); };
 
-  // เปลี่ยนกล่อง
+  // เปลี่ยนกล่อง (หน้า 2)
   document.getElementById('boxPicker').addEventListener('change', async (e)=>{
     currentBox = e.target.value;
     localStorage.setItem('em_box', currentBox);
     setBoxBadge();
+    // sync ไปหน้า view
+    document.getElementById('boxPickerView').value = currentBox;
+    await loadItems(); await loadLots(); await loadNear();
+  });
+
+  // เปลี่ยนกล่อง (หน้าแสดงผล)
+  document.getElementById('boxPickerView').addEventListener('change', async (e)=>{
+    currentBox = e.target.value;
+    localStorage.setItem('em_box', currentBox);
+    setBoxBadge();
+    // sync ไปหน้า 2
+    document.getElementById('boxPicker').value = currentBox;
     await loadItems(); await loadLots(); await loadNear();
   });
 
