@@ -17,19 +17,7 @@
     .stepper button{width:32px;height:32px;border:1px solid #e5e7eb;border-radius:.5rem;background:#fff}
     .stepper input{width:72px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.35rem}
     #apiBanner{display:none}
-
-    /* ไฮไลต์รายการที่ใกล้หมดอายุมากที่สุด */
-    .near-top{
-      background:#fff7ed;             /* ส้มอ่อน */
-      border-left:4px solid #f97316;  /* เส้นส้ม */
-      position:relative;
-    }
-    .near-top .tag-top{
-      position:absolute; top:8px; right:8px;
-      font-size:12px; line-height:1;
-      background:#fde68a; border:1px solid #facc15;
-      border-radius:9999px; padding:4px 8px; color:#7c2d12;
-    }
+    .near-first{background:#fffbeb;border-color:#fbbf24}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -45,44 +33,28 @@
     <button id="qrBtn" class="btn">QR</button>
   </header>
 
-  <div class="grid md:grid-cols-3 gap-3 mb-4">
-    <button id="tab-select" class="btn card text-left">หน้า 1: เลือกกล่องยา</button>
-    <button id="tab-form"   class="btn card text-left">หน้า 2: ลงข้อมูล</button>
-    <button id="tab-view"   class="btn card text-left">หน้าแสดงผล</button>
+  <div class="grid md:grid-cols-2 gap-3 mb-4">
+    <button id="tab-form" class="btn card text-left">หน้า 2: ลงข้อมูล</button>
+    <button id="tab-view" class="btn card text-left">หน้าแสดงผล</button>
   </div>
 
-  <!-- เลือกกล่อง -->
-  <section id="view-select" class="card p-4">
-    <h2 class="text-xl font-semibold mb-3">เลือกกล่องยา</h2>
-    <div id="boxBtns" class="flex gap-2 flex-wrap mb-4"></div>
-    <div class="flex items-center gap-2">
-      <input id="boxInput" class="border rounded px-3 py-2 w-48" placeholder="หรือพิมพ์เอง เช่น ER03">
-      <button id="boxSetBtn" class="btn primary">เลือกกล่องนี้</button>
-      <button id="boxClearBtn" class="btn">ล้าง</button>
-    </div>
-  </section>
-
   <!-- ลงข้อมูล -->
-  <section id="view-form" class="card p-4 hidden">
+  <section id="view-form" class="card p-4">
     <h2 class="text-xl font-semibold mb-4">ลงข้อมูล (เขียนเข้า Google Sheet)</h2>
 
-    <!-- Dashboard mini -->
-    <div class="grid md:grid-cols-2 gap-3 mb-4">
-      <div class="p-4 border rounded-lg bg-white">
-        <div class="text-sm muted mb-1">ยาใกล้หมดอายุมากที่สุด</div>
-        <div id="dashSoonest" class="text-base">— ไม่มีข้อมูล —</div>
+    <!-- เลือกกล่องยา (ย้ายมาหน้านี้) -->
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm mb-1">เลือกกล่องยา</label>
+        <select id="boxPicker" class="border rounded px-3 py-2 w-full"></select>
       </div>
-      <div class="p-4 border rounded-lg bg-white">
-        <div class="text-sm muted mb-1">สถิตินำกล่องมาที่ห้องยา</div>
-        <div id="dashVisits" class="text-base">— ไม่มีข้อมูล —</div>
-      </div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm mb-1">วันที่มาที่ห้องยา</label>
         <input type="date" id="dateVisit" class="border rounded px-3 py-2 w-full">
       </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm mb-1">ผู้ตรวจสอบ</label>
         <select id="inspector" class="border rounded px-3 py-2 w-full">
@@ -93,6 +65,16 @@
           <option>ภญ.อภิญญา</option>
           <option>ภญ.สุรีวัฒน์</option>
         </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-1">เหตุผลที่ใช้</label>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ยาใกล้ EXP"> ยาใกล้ EXP</label>
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="ใช้ยาในกล่อง" checked> ใช้ยาในกล่อง</label>
+          <label class="inline-flex items-center gap-2"><input type="radio" name="reason" value="อื่นๆ"> อื่นๆ</label>
+          <input id="reasonOther" class="border rounded px-3 py-2 w-72 hidden" placeholder="ระบุเหตุผลเพิ่มเติม">
+        </div>
       </div>
 
       <div class="md:col-span-2">
@@ -149,12 +131,10 @@
 
   <!-- หน้าแสดงใกล้หมดอายุ -->
   <section id="view-output" class="card p-4 hidden">
-    <div class="flex items-center justify-between mb-2 gap-2">
+    <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-semibold">สรุปและยาใกล้หมดอายุ</h2>
-      <div class="flex items-center gap-2">
-        <label class="muted">กล่อง</label>
-        <select id="nearBox" class="border rounded px-3 py-1 w-32"></select>
-        <label class="muted ml-2">ภายใน (วัน)</label>
+      <div>
+        <label class="mr-2 muted">ภายใน (วัน)</label>
         <input id="nearDays" type="number" min="1" value="1000" class="border rounded px-3 py-1 w-24">
         <button id="refreshNearBtn" class="btn">รีเฟรช</button>
       </div>
@@ -167,7 +147,7 @@
 <div id="qrModal" class="fixed inset-0 bg-black/50 hidden z-50">
   <div class="min-h-full flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-5 w-full max-w-sm text-center">
-      <h3 class="text-lg font-semibold mb-3">สแกนเพื่อเข้าแอป (หน้าเลือกกล่อง)</h3>
+      <h3 class="text-lg font-semibold mb-3">สแกนเพื่อเข้าแอป</h3>
       <div id="qrBox" class="mb-3 flex justify-center"></div>
       <input id="qrLink" class="border rounded px-3 py-2 w-full text-sm mb-3" readonly>
       <div class="flex justify-center gap-2">
@@ -199,15 +179,13 @@ const API_BASE = 'https://script.google.com/macros/s/AKfycbxThaOhEpXuhcGQ-6YuGef
 
 // ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
-let viewBox    = currentBox || '';     // กล่องที่ใช้ดูในหน้าแสดงผล (แยกจาก currentBox)
-let allBoxes   = [];                   // cache รายชื่อกล่อง
 let currentLots = [];
 let useInputs   = {}; // exp -> qtyUsed
 let newLotsPend = [];
 
 // ===== Helpers =====
 function setBoxBadge(){ const el=document.getElementById('boxBadge'); if(currentBox){ el.textContent='กล่อง: '+currentBox; el.classList.remove('hidden'); } else { el.classList.add('hidden'); } }
-function switchView(id){ ['view-select','view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+function switchView(id){ ['view-form','view-output'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 function toast(el,msg){ el.textContent = msg; setTimeout(()=> el.textContent='', 3000); }
 
 async function apiGet(p){
@@ -224,12 +202,10 @@ async function apiPost(payload){
 function showApiBanner(msg){ const b=document.getElementById('apiBanner'); b.textContent=msg; b.style.display='block'; }
 function hideApiBanner(){ const b=document.getElementById('apiBanner'); b.style.display='none'; b.textContent=''; }
 
-function getAppBaseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
-function getSelectUrl(){ const base=getAppBaseUrl(); return base.endsWith('/')? (base+'?view=select'):(base+'/?view=select'); }
-function applyDeepLinkDefault(){ const view=(new URLSearchParams(location.search).get('view')||'').toLowerCase(); if(view==='select') return switchView('view-select'); return currentBox? switchView('view-form'):switchView('view-select'); }
+function baseUrl(){ return window.location.origin + window.location.pathname.replace(/index\.html?$/,''); }
 
 // QR
-function openQR(){ const APP_URL=getSelectUrl(); const box=document.getElementById('qrBox'); box.innerHTML=''; new QRCode(box,{text:APP_URL,width:256,height:256,correctLevel:QRCode.CorrectLevel.M}); document.getElementById('qrLink').value=APP_URL; document.getElementById('qrModal').classList.remove('hidden'); }
+function openQR(){ const APP_URL=baseUrl(); const box=document.getElementById('qrBox'); box.innerHTML=''; new QRCode(box,{text:APP_URL,width:256,height:256,correctLevel:QRCode.CorrectLevel.M}); document.getElementById('qrLink').value=APP_URL; document.getElementById('qrModal').classList.remove('hidden'); }
 function closeQR(){ document.getElementById('qrModal').classList.add('hidden'); }
 function downloadQR(){ const img=document.querySelector('#qrBox img'); const canvas=document.querySelector('#qrBox canvas'); const src=img?img.src:(canvas?canvas.toDataURL('image/png'):null); if(!src) return; const a=document.createElement('a'); a.href=src; a.download='app-qr.png'; a.click(); }
 async function copyQRLink(){ const v=document.getElementById('qrLink').value; try{ await navigator.clipboard.writeText(v); alert('คัดลอกลิงก์แล้ว'); }catch{ alert(v); } }
@@ -240,32 +216,22 @@ function openNeedAddModal(html){ const m=document.getElementById('modalNeedAdd')
 // ===== Boxes / Items / Lots =====
 async function loadBoxes(){
   const data = await apiGet({action:'boxes'});
-  allBoxes = data.boxes || ['IPD01','ER01','ER02','ER03'];
-
-  // ปุ่มเลือกกล่องในหน้า "ลงข้อมูล"
-  const b = document.getElementById('boxBtns'); b.innerHTML='';
-  allBoxes.forEach(x=>{
-    const btn=document.createElement('button'); btn.className='btn'; btn.textContent=x;
-    btn.onclick=()=>{ currentBox=x; localStorage.setItem('em_box',x); setBoxBadge(); loadItems().then(loadLots); loadNear(); loadDashboard(); switchView('view-form'); };
-    b.appendChild(btn);
-  });
-
-  // ดรอปดาวน์ในหน้า "แสดงผล"
-  populateNearBoxSelect(allBoxes);
-}
-
-function populateNearBoxSelect(boxes){
-  const sel = document.getElementById('nearBox');
-  if (!sel) return;
+  const boxes = data.boxes || ['IPD01','ER01','ER02','ER03'];
+  const sel = document.getElementById('boxPicker');
   sel.innerHTML = '';
   boxes.forEach(x=>{
-    const o=document.createElement('option');
-    o.value=x; o.textContent=x;
-    sel.appendChild(o);
+    const o=document.createElement('option'); o.value=x; o.textContent=x; sel.appendChild(o);
   });
-  // กำหนดค่าเริ่มต้น
-  if (!viewBox) viewBox = currentBox || boxes[0] || '';
-  if (viewBox) sel.value = viewBox;
+
+  // ตั้งค่ากล่องเริ่มต้น: ?box=.. > localStorage > รายการแรก
+  const urlBox = (new URLSearchParams(location.search).get('box')||'').trim();
+  if(urlBox && boxes.includes(urlBox)) currentBox = urlBox;
+  if(!currentBox) currentBox = boxes[0];
+
+  sel.value = currentBox;
+  localStorage.setItem('em_box', currentBox);
+  setBoxBadge();
+  await loadItems(); await loadLots(); await loadNear();
 }
 
 async function loadItems(){
@@ -316,15 +282,7 @@ function renderNewList(){
   const wrap=document.getElementById('newList'); const empty=document.getElementById('newEmpty'); wrap.innerHTML='';
   if(!newLotsPend.length){ empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
-  newLotsPend.forEach((n,idx)=>{
-    const row=document.createElement('div');
-    row.className='flex items-center justify-between p-2 border rounded bg-white';
-    row.innerHTML=`<div>EXP: <span class="font-medium">${n.exp}</span> — จำนวน: <span class="font-medium">${n.qty}</span></div>`;
-    const del=document.createElement('button'); del.className='btn'; del.textContent='ลบ';
-    del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); };
-    row.appendChild(del);
-    wrap.appendChild(row);
-  });
+  newLotsPend.forEach((n,idx)=>{ const row=document.createElement('div'); row.className='flex items-center justify-between p-2 border rounded bg-white'; row.innerHTML=`<div>EXP: <span class="font-medium">${n.exp}</span> — จำนวน: <span class="font-medium">${n.qty}</span></div>`; const del=document.createElement('button'); del.className='btn'; del.textContent='ลบ'; del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); }; row.appendChild(del); wrap.appendChild(row); });
 }
 function addNewLot(){
   const exp=(document.getElementById('addExp').value||'').trim();
@@ -364,7 +322,7 @@ async function submitData(){
     if(res.ok){
       toast(msg,'บันทึกแล้ว');
       useInputs={}; newLotsPend=[]; renderNewList();
-      await loadLots(); await loadNear(); await loadDashboard();
+      await loadLots(); await loadNear();
     }else{
       toast(msg,'ผิดพลาด: ' + res.error);
     }
@@ -373,105 +331,67 @@ async function submitData(){
   }
 }
 
-// ===== Reason & Near & Dashboard =====
+// ===== Reason & Near =====
 function getReason(){ const r=document.querySelector('input[name="reason"]:checked'); if(!r) return ''; if(r.value==='อื่นๆ') return document.getElementById('reasonOther').value.trim(); return r.value; }
 
-/** โหลดรายการยาใกล้หมดอายุของกล่องที่เลือก (หน้าแสดงผล) */
-async function loadNear(box){
-  const targetBox = box || viewBox || currentBox;
-  if(!targetBox) return;
-  const days = Number(document.getElementById('nearDays').value)||1000;
-
-  const data = await apiGet({action:'near', box: targetBox, days});
-  const list=document.getElementById('nearList'); list.innerHTML='';
-
-  const title=document.createElement('div'); title.className='mb-2 muted';
-  title.textContent=`กล่อง: ${targetBox} — ยาที่หมดภายใน ${data.days||days} วัน`;
-  list.appendChild(title);
-
-  // เรียงวันหมดอายุจากใกล้ไปไกล เผื่อ API ยังไม่ได้เรียง
-  const rows = (data.rows||[]).slice().sort((a,b)=> (a.expISO>b.expISO?1:-1));
-  rows.forEach((r,idx)=>{
-    const el=document.createElement('div');
-    el.className='p-3 border rounded flex items-center justify-between relative' + (idx===0 ? ' near-top':'');
-    el.innerHTML =
-      `<div>
-         <div class="font-medium">${r.drug}</div>
-         <div class="muted">Lot EXP: ${r.expISO}</div>
-       </div>
-       <div class="text-right">จำนวน: ${r.qty}</div>
-       ${idx===0 ? '<span class="tag-top">ใกล้สุด</span>' : ''}`;
-    list.appendChild(el);
-  });
-  if(!rows.length){
-    const empty=document.createElement('div'); empty.className='muted'; empty.textContent='— ไม่มีรายการใกล้หมดอายุ —'; list.appendChild(empty);
-  }
-}
-
-async function loadDashboard(){
+async function loadNear(){
   if(!currentBox) return;
-  const d = await apiGet({action:'dashboard', box: currentBox});
-  renderDashboard(d);
-}
-function renderDashboard(d){
-  const soonEl=document.getElementById('dashSoonest');
-  if(!d || !d.ok || !d.soonestDate){ soonEl.textContent='— ไม่มีข้อมูล —'; }
-  else { soonEl.innerHTML = `<div class="font-medium">${d.soonestList}</div><div class="muted">EXP: ${d.soonestDate}</div>`; }
-
-  const visEl=document.getElementById('dashVisits');
-  if(!d || !d.ok){ visEl.textContent='— ไม่มีข้อมูล —'; }
-  else {
-    const v=d.visits||{}; const by=v.byReason||{};
-    visEl.innerHTML =
-      `<div class="font-medium">${v.total||0} ครั้ง</div>
-       <div class="muted">ยาใกล้ EXP: ${by['ยาใกล้ EXP']||0} • ใช้ยาในกล่อง: ${by['ใช้ยาในกล่อง']||0} • อื่นๆ/ไม่ระบุ: ${by['อื่นๆ/ไม่ระบุ']||0}</div>
-       <div class="muted">ครั้งล่าสุด: ${v.lastDate||'-'}</div>`;
-  }
+  const days = Number(document.getElementById('nearDays').value)||1000;
+  const data = await apiGet({action:'near', box: currentBox, days});
+  const list=document.getElementById('nearList'); list.innerHTML='';
+  const title=document.createElement('div'); title.className='mb-2 muted'; title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days||days} วัน`; list.appendChild(title);
+  (data.rows||[]).forEach((r,idx)=>{ 
+    const el=document.createElement('div'); 
+    el.className='p-3 border rounded flex items-center justify-between ' + (idx===0?'near-first':'');
+    el.innerHTML=`<div><div class="font-medium">${r.drug}</div><div class="muted">Lot EXP: ${r.expISO}</div></div><div class="text-right">จำนวน: ${r.qty}</div>`;
+    list.appendChild(el); 
+  });
+  if(!data.rows || !data.rows.length){ const empty=document.createElement('div'); empty.className='muted'; empty.textContent='— ไม่มีรายการใกล้หมดอายุ —'; list.appendChild(empty); }
 }
 
 // ===== Events =====
-window.addEventListener('DOMContentLoaded', ()=>{
+window.addEventListener('DOMContentLoaded', async ()=>{
   setBoxBadge();
   document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
-  loadBoxes();
 
-  document.getElementById('tab-select').onclick = ()=> switchView('view-select');
-  document.getElementById('tab-form').onclick   = ()=> { if(!currentBox){ switchView('view-select'); } else { switchView('view-form'); } };
-  document.getElementById('tab-view').onclick   = ()=> {
-    // เข้าแท็บผลลัพธ์: ให้ select กล่องพร้อม และโหลดข้อมูลของ viewBox
-    switchView('view-output');
-    // ถ้ายังไม่มีรายชื่อกล่อง (โหลดไม่ทัน) ให้เรียกใหม่
-    if (!allBoxes.length) { loadBoxes().then(()=> loadNear(viewBox || currentBox)); }
-    else {
-      // sync ค่า select กับ viewBox
-      const sel = document.getElementById('nearBox');
-      if (viewBox) sel.value = viewBox; else if (currentBox) sel.value = currentBox;
-      loadNear(viewBox || currentBox);
-    }
-  };
+  // load boxes แล้วตั้งค่ากล่องเริ่มต้น + โหลดข้อมูล
+  await loadBoxes();
 
-  document.getElementById('boxSetBtn').onclick  = ()=>{ const v=document.getElementById('boxInput').value.trim(); if(v){ currentBox=v; viewBox = v; localStorage.setItem('em_box',v); setBoxBadge(); loadItems().then(loadLots); loadNear(viewBox); loadDashboard(); switchView('view-form'); } };
-  document.getElementById('boxClearBtn').onclick= ()=>{ localStorage.removeItem('em_box'); currentBox=''; setBoxBadge(); switchView('view-select'); };
+  // tab
+  document.getElementById('tab-form').onclick   = ()=> switchView('view-form');
+  document.getElementById('tab-view').onclick   = ()=> { switchView('view-output'); loadNear(); };
 
+  // เปลี่ยนกล่อง
+  document.getElementById('boxPicker').addEventListener('change', async (e)=>{
+    currentBox = e.target.value;
+    localStorage.setItem('em_box', currentBox);
+    setBoxBadge();
+    await loadItems(); await loadLots(); await loadNear();
+  });
+
+  // เปลี่ยนยา -> โหลดล็อต
   document.getElementById('drugSelect').addEventListener('change', loadLots);
-  document.querySelectorAll('input[name="reason"]').forEach(r=> r.addEventListener('change', ()=>{ const other=document.getElementById('reasonOther'); if(r.value==='อื่นๆ' && r.checked){ other.classList.remove('hidden'); other.focus(); } else if(r.value!=='อื่นๆ'){ other.classList.add('hidden'); other.value=''; } }));
 
+  // เหตุผลอื่นๆ
+  document.querySelectorAll('input[name="reason"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const other=document.getElementById('reasonOther');
+      if(r.value==='อื่นๆ' && r.checked){ other.classList.remove('hidden'); other.focus(); }
+      else if(r.value!=='อื่นๆ'){ other.classList.add('hidden'); other.value=''; }
+    });
+  });
+
+  // ปุ่มต่างๆ
   document.getElementById('addNewBtn').onclick = addNewLot;
   document.getElementById('submitBtn').onclick = submitData;
+  document.getElementById('refreshNearBtn').onclick = loadNear;
 
-  // คอนโทรลหน้าแสดงผล
-  document.getElementById('nearBox').addEventListener('change', (e)=>{ viewBox = e.target.value; loadNear(viewBox); });
-  document.getElementById('refreshNearBtn').onclick = ()=> loadNear(viewBox || currentBox);
-
+  // QR modal
   document.getElementById('qrBtn').onclick=openQR;
   document.getElementById('qrClose').onclick=closeQR;
   document.getElementById('qrDL').onclick=downloadQR;
   document.getElementById('qrCopy').onclick=copyQRLink;
   document.getElementById('qrModal').addEventListener('click',(e)=>{ if(e.target.id==='qrModal') closeQR(); });
-
-  applyDeepLinkDefault();
-
-  if(currentBox){ setBoxBadge(); loadItems().then(loadLots); loadNear(currentBox); loadDashboard(); }
 });
 </script>
 </body>
