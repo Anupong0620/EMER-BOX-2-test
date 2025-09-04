@@ -7,6 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
+      /* ป้ายบอกว่าใกล้หมดอายุมากที่สุด */
+.badge-nearest{
+  background:#fef3c7;        /* amber-100 */
+  border:1px solid #f59e0b;  /* amber-500 */
+  color:#92400e;             /* amber-800 */
+  padding:.15rem .5rem;
+  border-radius:9999px;
+  font-size:.75rem;
+}
+/* ไฮไลต์แถวแรก (ใกล้หมดสุด) เบา ๆ */
+.near-first{
+  background:#fff7ed;        /* orange-50 */
+}
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
     .btn{border-radius:.5rem;padding:.5rem .9rem;border:1px solid #e5e7eb;background:#f8fafc}
     .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
@@ -351,16 +364,34 @@ async function loadNear(){
   const days = Number(document.getElementById('nearDays').value)||1000;
   const data = await apiGet({action:'near', box: currentBox, days});
   const list=document.getElementById('nearList'); list.innerHTML='';
-  const title=document.createElement('div'); title.className='mb-2 muted'; title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days||days} วัน`; list.appendChild(title);
-  (data.rows||[]).forEach((r,idx)=>{ 
-    const el=document.createElement('div'); 
-    el.className='p-3 border rounded flex items-center justify-between ' + (idx===0?'near-first':'');
-    el.innerHTML=`<div><div class="font-medium">${r.drug}</div><div class="muted">Lot EXP: ${r.expISO}</div></div><div class="text-right">จำนวน: ${r.qty}</div>`;
-    list.appendChild(el); 
-  });
-  if(!data.rows || !data.rows.length){ const empty=document.createElement('div'); empty.className='muted'; empty.textContent='— ไม่มีรายการใกล้หมดอายุ —'; list.appendChild(empty); }
-}
 
+  const title=document.createElement('div');
+  title.className='mb-2 muted';
+  title.textContent=`กล่อง: ${currentBox} — ยาที่หมดภายใน ${data.days||days} วัน`;
+  list.appendChild(title);
+
+  (data.rows||[]).forEach((r,idx)=>{
+    const badge = idx===0 ? `<span class="badge-nearest">ยาใกล้หมดอายุมากที่สุด</span>` : '';
+    const el=document.createElement('div');
+    el.className='p-3 border rounded flex items-center justify-between ' + (idx===0 ? 'near-first' : '');
+    el.innerHTML = `
+      <div>
+        <div class="font-medium flex items-center gap-2">
+          ${badge}${badge ? '' : ''} ${r.drug}
+        </div>
+        <div class="muted">Lot EXP: ${r.expISO}</div>
+      </div>
+      <div class="text-right">จำนวน: ${r.qty}</div>`;
+    list.appendChild(el);
+  });
+
+  if(!data.rows || !data.rows.length){
+    const empty=document.createElement('div');
+    empty.className='muted';
+    empty.textContent='— ไม่มีรายการใกล้หมดอายุ —';
+    list.appendChild(empty);
+  }
+}
 // ===== Events =====
 window.addEventListener('DOMContentLoaded', async ()=>{
   setBoxBadge();
