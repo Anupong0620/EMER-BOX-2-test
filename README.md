@@ -31,3 +31,8 @@ Notes
   a) Host index.html via Apps Script HtmlService in the same project, OR
   b) Use a tiny proxy (e.g., Cloudflare Workers) between your static site and Apps Script.
 - Data logs are recorded in the Transactions sheet for audit.
+
+## 📘 คู่มือการใช้งานระบบ EMER-BOX
+
+- [เปิดคู่มือส่วนลงข้อมูล (PDF)](https://github.com/Anupong0620/EMER-BOX-2-test/blob/main/คู่มือการใช้งาน%20drug%20Emer%20ส่วนลงข้อมูล.pdf)
+- [เปิดคู่มือส่วนหน้าแสดงผล (PDF)](https://github.com/Anupong0620/EMER-BOX-2-test/blob/main/คู่มือการใช้งาน%20Emer%20drug%20ส่วน%20หน้าแสดงผล%20(1).pdf)
