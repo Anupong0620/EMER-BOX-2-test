@@ -32,3 +32,7 @@ Notes
   b) Use a tiny proxy (e.g., Cloudflare Workers) between your static site and Apps Script.
 - Data logs are recorded in the Transactions sheet for audit.
 
+## 📘 คู่มือการใช้งานระบบ EMER-BOX
+
+- [เปิดคู่มือส่วนลงข้อมูล (PDF)](https://github.com/Anupong0620/EMER-BOX-2-test/blob/main/EMER-BOX-MANUAL1.pdf)
+- [เปิดคู่มือส่วนหน้าแสดงผล (PDF)](https://github.com/Anupong0620/EMER-BOX-2-test/blob/main/EMER-BOX-MANUAL2.pdf)
