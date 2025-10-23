@@ -36,3 +36,4 @@ Notes
 
 - [เปิดคู่มือส่วนลงข้อมูล (PDF)](https://github.com/Anupong0620/EMER-BOX-2-test/blob/main/EMER-BOX-MANUAL1.pdf)
 - [เปิดคู่มือส่วนหน้าแสดงผล (PDF)](https://github.com/Anupong0620/EMER-BOX-2-test/blob/main/EMER-BOX-MANUAL2.pdf)
+
