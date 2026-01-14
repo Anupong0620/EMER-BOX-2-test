@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap');
-    body { font-family: 'Sarabun', sans-serif; } /* เพิ่มฟอนต์ไทยให้อ่านง่ายขึ้น */
+    body { font-family: 'Sarabun', sans-serif; }
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
     .btn{border-radius:.5rem;padding:.5rem .9rem;border:1px solid #e5e7eb;background:#f8fafc; transition: all 0.2s;}
     .btn:active { transform: scale(0.95); }
@@ -103,7 +103,7 @@
       <div class="flex items-center justify-between mb-2">
         <h3 class="font-semibold text-green-700">➕ เพิ่มยาเข้าใหม่ (ใส่คืนกล่อง)</h3>
       </div>
-      
+       
       <div class="bg-green-50 p-4 rounded-lg border border-green-100">
         <label class="block text-sm mb-1 font-medium text-green-800">วันหมดอายุ (EXP)</label>
         
@@ -206,18 +206,15 @@ let newLotsPend = [];
 
 // ===== Helpers : Date & Format =====
 function initDateSelectors(){
-    // สร้างตัวเลือกวันที่ 1-31
     const dSel = document.getElementById('inputD');
     for(let i=1; i<=31; i++){
         const o=document.createElement('option'); o.value=i; o.text=i; dSel.appendChild(o);
     }
-    // สร้างตัวเลือกเดือน
     const mSel = document.getElementById('inputM');
     const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
     thMonth.forEach((m,i)=>{
         const o=document.createElement('option'); o.value=i+1; o.text=m; mSel.appendChild(o);
     });
-    // ตั้งค่า Default เป็นเดือน/ปีปัจจุบัน
     const now = new Date();
     dSel.value = now.getDate();
     mSel.value = now.getMonth()+1;
@@ -225,7 +222,6 @@ function initDateSelectors(){
     document.getElementById('inputType').value = 'BE';
 }
 
-// แปลง Input (วัน/เดือน/ปี/ประเภท) -> ISO String (YYYY-MM-DD) เพื่อส่ง API
 function getInputDateISO(){
     const d = document.getElementById('inputD').value.padStart(2,'0');
     const m = document.getElementById('inputM').value.padStart(2,'0');
@@ -233,13 +229,11 @@ function getInputDateISO(){
     const type = document.getElementById('inputType').value;
     
     if(y === 0) return '';
-    // ถ้าเลือก พ.ศ. ให้ลบ 543 เพื่อเป็น ค.ศ. (ISO Standard)
     if(type === 'BE') y = y - 543; 
     
     return `${y}-${m}-${d}`;
 }
 
-// แปลง ISO String (2024-02-01) -> ไทย (01 ก.พ. 2567)
 function formatThaiDate(isoStr){
     if(!isoStr) return '-';
     try{
@@ -275,7 +269,7 @@ async function loadBoxes(){
 
   const selForm = document.getElementById('boxSelect'); selForm.innerHTML = '';
   const selView = document.getElementById('boxViewSelect'); selView.innerHTML = '';
-  
+   
   boxes.forEach(b=>{
     selForm.add(new Option(b,b));
     selView.add(new Option(b,b));
@@ -303,11 +297,10 @@ function makeStepper(expISO, maxQty){
   const wrap=document.createElement('div'); wrap.className='stepper justify-center';
   const minus=document.createElement('button'); minus.textContent='−';
   const input=document.createElement('input'); input.type='number'; input.min='0'; input.max=String(maxQty); input.value=String(useInputs[expISO]||0);
-  
+   
   const clamp=()=>{ 
       let v=parseInt(input.value)||0; if(v<0)v=0; if(v>maxQty)v=maxQty; 
       input.value=String(v); useInputs[expISO]=v; 
-      // Update visual cues if needed
   };
   minus.onclick=(e)=>{ e.preventDefault(); input.value=String(Math.max(0,(parseInt(input.value)||0)-1)); clamp(); };
   const plus=document.createElement('button'); plus.textContent='+';
@@ -325,10 +318,9 @@ function renderStockTable(){
   }
   currentLots.forEach(l=>{
     const tr=document.createElement('tr');
-    // ใช้ formatThaiDate แสดงผล
     tr.innerHTML = `<td class="p-3 text-sm text-slate-700">${formatThaiDate(l.expISO)}</td>
                     <td class="p-3 text-center font-medium">${l.qty}</td>`;
-    
+     
     const tdStep = document.createElement('td'); tdStep.className='p-2';
     tdStep.appendChild(makeStepper(l.expISO, l.qty));
     tr.appendChild(tdStep);
@@ -345,18 +337,15 @@ async function loadLots(){
   renderStockTable();
 }
 
-// ===== New Lots (Modified) =====
 function addNewLot(){
-  const expISO = getInputDateISO(); // รับค่าจากชุดตัวเลือกวันที่
+  const expISO = getInputDateISO();
   const qty = parseInt(document.getElementById('addQty').value)||0;
-  
+   
   if(!expISO || expISO.length < 10){ alert('โปรดตรวจสอบวันที่'); return; }
   if(qty<=0){ alert('โปรดระบุจำนวน'); return; }
-  
+   
   newLotsPend.push({exp: expISO, qty}); 
   renderNewList();
-  
-  // Reset fields (Optional)
   document.getElementById('addQty').value='';
 }
 
@@ -364,11 +353,10 @@ function renderNewList(){
   const wrap=document.getElementById('newList'); const empty=document.getElementById('newEmpty'); wrap.innerHTML='';
   if(!newLotsPend.length){ empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
-  
+   
   newLotsPend.forEach((n,idx)=>{ 
       const row=document.createElement('div'); 
       row.className='flex items-center justify-between p-2 border rounded bg-white shadow-sm'; 
-      // แสดงวันที่ไทยในรายการรอเพิ่ม
       row.innerHTML=`<div class="text-sm"><span class="font-bold text-green-700">เข้าใหม่:</span> ${formatThaiDate(n.exp)} <span class="mx-2 text-slate-300">|</span> จำนวน: <b>${n.qty}</b></div>`; 
       const del=document.createElement('button'); del.className='text-red-500 hover:text-red-700 text-sm px-2'; del.textContent='ลบ'; 
       del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); }; 
@@ -376,7 +364,6 @@ function renderNewList(){
   });
 }
 
-// ===== Submit & Notify =====
 async function submitData(){
   const btn = document.getElementById('submitBtn');
   const msg = document.getElementById('saveMsg');
@@ -389,7 +376,6 @@ async function submitData(){
   if(!drug) return alert('โปรดเลือกยา');
   if(!reason) return alert('โปรดเลือกเหตุผล');
 
-  // ... (ส่วน Validation ตรวจสอบสต็อก เหมือนเดิม ไม่ต้องแก้) ...
   const usedLots = Object.entries(useInputs).filter(([_,q])=>q>0).map(([exp,qty])=>({exp, qtyUsed:qty}));
   const stockMap={}; currentLots.forEach(l=>{ stockMap[l.expISO]=(stockMap[l.expISO]||0)+Number(l.qty); });
   const addMap={}; newLotsPend.forEach(n=>{ addMap[n.exp]=(addMap[n.exp]||0)+Number(n.qty); });
@@ -403,50 +389,20 @@ async function submitData(){
       document.getElementById('modalNeedAdd').classList.remove('hidden');
       return;
   }
-  // ... (จบส่วน Validation) ...
 
-  // เริ่มส่งข้อมูล
+  // ส่งข้อมูล
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
   try{
-      // ส่งข้อมูลไปที่ Apps Script
       const res = await apiPost({ box:currentBox, dateVisit, drug, reason, inspector, usedLots, newLots:newLotsPend });
       
       if(res.ok){
-          // 1. เคลียร์ค่าต่างๆ
           useInputs={}; newLotsPend=[]; renderNewList(); await loadLots();
-          
-          // 2. (จุดสำคัญ) เอาข้อมูล nearest ที่ Server ส่งกลับมา มาแสดง Pop-up เลย!
-          // ไม่ต้องเสียเวลา call API รอบที่ 2
           showSuccessModal(res.nearest); 
-          
       } else {
           toast(msg, 'Error: '+res.error);
       }
   }catch(e){
       toast(msg, 'Connection Failed: ' + e);
-  }
-  btn.disabled = false; btn.textContent = '✅ บันทึกข้อมูล';
-}
-
-  // Send API
-  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-  try{
-      const res = await apiPost({ box:currentBox, dateVisit, drug, reason, inspector, usedLots, newLots:newLotsPend });
-      if(res.ok){
-          // Reset Form
-          useInputs={}; newLotsPend=[]; renderNewList(); await loadLots();
-          
-          // ** NEW: Fetch Nearest Expiry for Alert **
-          const nearData = await apiGet({action:'near', box:currentBox, days:3650}); // ขอข้อมูลยาทุกตัว
-          const nearest = (nearData.rows && nearData.rows.length > 0) ? nearData.rows[0] : null;
-          
-          showSuccessModal(nearest); // Show popup
-          
-      } else {
-          toast(msg, 'Error: '+res.error);
-      }
-  }catch(e){
-      toast(msg, 'Connection Failed');
   }
   btn.disabled = false; btn.textContent = '✅ บันทึกข้อมูล';
 }
@@ -467,8 +423,6 @@ function showSuccessModal(item){
 
 function closeSuccessModal(){
     document.getElementById('successModal').classList.add('hidden');
-    // Optional: สลับไปหน้า View เพื่อดูรายละเอียดต่อ
-    // switchView('view-output'); loadNear();
 }
 
 function getReason(){
@@ -484,17 +438,17 @@ async function loadNear(){
   const days = Number(document.getElementById('nearDays').value)||1000;
   const list = document.getElementById('nearList'); 
   list.innerHTML = '<div class="text-center p-4 text-slate-400">Loading...</div>';
-  
+   
   const data = await apiGet({action:'near', box: currentBox, days});
   list.innerHTML='';
-  
+   
   if(!data.rows || !data.rows.length){
       list.innerHTML='<div class="text-center p-5 border rounded bg-slate-50">✅ เยี่ยมมาก! ไม่มียาใกล้หมดอายุในช่วงนี้</div>';
       return;
   }
-  
+   
   data.rows.forEach((r,idx)=>{
-      const isUrgent = r.days < 90; // น้อยกว่า 90 วัน = ด่วน
+      const isUrgent = r.days < 90; 
       const el=document.createElement('div');
       el.className=`p-3 border rounded-lg flex items-center justify-between bg-white shadow-sm ${idx===0 ? 'ring-2 ring-amber-300' : ''}`;
       el.innerHTML=`
@@ -518,10 +472,9 @@ async function loadNear(){
 
 // ===== Init =====
 window.addEventListener('DOMContentLoaded', ()=>{
-    initDateSelectors(); // สร้าง Dropdown วันที่
+    initDateSelectors();
     document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
     
-    // Check Reason Radio
     document.querySelectorAll('input[name="reason"]').forEach(r=>{
         r.addEventListener('change', (e)=>{
             const txt = document.getElementById('reasonOther');
@@ -541,7 +494,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('submitBtn').onclick=submitData;
     document.getElementById('refreshNearBtn').onclick=loadNear;
     
-    // QR Logic (Same as before)
     document.getElementById('qrBtn').onclick = ()=>{
       const url = window.location.href.split('?')[0]; 
       const appUrl = url + '?view=select';
