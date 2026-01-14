@@ -389,23 +389,44 @@ async function submitData(){
   if(!drug) return alert('โปรดเลือกยา');
   if(!reason) return alert('โปรดเลือกเหตุผล');
 
+  // ... (ส่วน Validation ตรวจสอบสต็อก เหมือนเดิม ไม่ต้องแก้) ...
   const usedLots = Object.entries(useInputs).filter(([_,q])=>q>0).map(([exp,qty])=>({exp, qtyUsed:qty}));
-  
-  // Validation
   const stockMap={}; currentLots.forEach(l=>{ stockMap[l.expISO]=(stockMap[l.expISO]||0)+Number(l.qty); });
   const addMap={}; newLotsPend.forEach(n=>{ addMap[n.exp]=(addMap[n.exp]||0)+Number(n.qty); });
   let errorHtml = '';
-  
   usedLots.forEach(u=>{
       const have = (stockMap[u.exp]||0) + (addMap[u.exp]||0);
       if(u.qtyUsed > have) errorHtml += `<li>Exp ${formatThaiDate(u.exp)}: ต้องการ ${u.qtyUsed} แต่มี ${have}</li>`;
   });
-  
   if(errorHtml){
       document.getElementById('modalNeedAddMsg').innerHTML = `<ul class="list-disc pl-5 space-y-1">${errorHtml}</ul>`;
       document.getElementById('modalNeedAdd').classList.remove('hidden');
       return;
   }
+  // ... (จบส่วน Validation) ...
+
+  // เริ่มส่งข้อมูล
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try{
+      // ส่งข้อมูลไปที่ Apps Script
+      const res = await apiPost({ box:currentBox, dateVisit, drug, reason, inspector, usedLots, newLots:newLotsPend });
+      
+      if(res.ok){
+          // 1. เคลียร์ค่าต่างๆ
+          useInputs={}; newLotsPend=[]; renderNewList(); await loadLots();
+          
+          // 2. (จุดสำคัญ) เอาข้อมูล nearest ที่ Server ส่งกลับมา มาแสดง Pop-up เลย!
+          // ไม่ต้องเสียเวลา call API รอบที่ 2
+          showSuccessModal(res.nearest); 
+          
+      } else {
+          toast(msg, 'Error: '+res.error);
+      }
+  }catch(e){
+      toast(msg, 'Connection Failed: ' + e);
+  }
+  btn.disabled = false; btn.textContent = '✅ บันทึกข้อมูล';
+}
 
   // Send API
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
