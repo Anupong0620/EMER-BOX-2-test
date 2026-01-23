@@ -22,6 +22,7 @@
     #apiBanner{display:none}
     .badge-nearest{background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:.15rem .5rem;border-radius:9999px;font-size:.75rem}
     .near-first{background:#fffbeb;border-color:#fbbf24}
+    .badge-new{background:#dcfce7;color:#166534;border:1px solid #86efac;font-size:0.65rem;padding:1px 6px;border-radius:4px;font-weight:bold;margin-left:4px;vertical-align:middle;}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 pb-10">
@@ -62,8 +63,7 @@
           <option>ภญ.พนารัตน์</option>
           <option>ภญ.พัชรีวรรณ</option>
           <option>ภก.อนุพงศ์</option>
-          <option>ภญ.อภิญญา</option>
-          <option>ภญ.สุรีวัฒน์</option>
+          <option>ภญ.อภิญญา</option>      
           </select>
       </div>
 
@@ -77,66 +77,88 @@
         </div>
       </div>
 
-      <div class="md:col-span-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
-        <label class="block text-sm mb-1 font-bold text-blue-800">5. เลือกรายการยา</label>
-        <select id="drugSelect" class="border rounded px-3 py-2 w-full bg-white"></select>
-      </div>
-    </div>
+      <!-- ส่วนทำงานหลัก (Working Area) -->
+      <div id="workingArea" class="md:col-span-2 space-y-4 border-t pt-4 mt-2">
+          <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+            <label class="block text-sm mb-1 font-bold text-blue-800">5. เลือกรายการยา</label>
+            <select id="drugSelect" class="border rounded px-3 py-2 w-full bg-white"></select>
+          </div>
 
-    <div class="mt-6">
-      <h3 class="font-semibold mb-2 flex items-center gap-2">📦 สต็อกปัจจุบัน <span class="text-xs font-normal text-slate-500">(เลือกจำนวนที่จะตัดออก)</span></h3>
-      <div class="overflow-x-auto rounded-lg border">
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-100">
-            <tr>
-              <th class="p-3 text-left">Lot EXP (ว/ด/ป)</th>
-              <th class="p-3 text-center">มีอยู่</th>
-              <th class="p-3 text-center">ตัดออก (Used)</th>
-            </tr>
-          </thead>
-          <tbody id="stockBody" class="divide-y"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="mt-8 pt-4 border-t">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="font-semibold text-green-700">➕ เพิ่มยาเข้าใหม่ (ใส่คืนกล่อง)</h3>
-      </div>
-       
-      <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-        <label class="block text-sm mb-1 font-medium text-green-800">วันหมดอายุ (EXP)</label>
-        
-        <div class="grid grid-cols-4 gap-2 mb-3">
-            <select id="inputD" class="border rounded p-2 bg-white col-span-1 text-center"></select>
-            <select id="inputM" class="border rounded p-2 bg-white col-span-1 text-center"></select>
-            <input id="inputY" type="number" class="border rounded p-2 text-center col-span-1" placeholder="ปี" >
-            <select id="inputType" class="border rounded p-2 bg-white col-span-1 text-center font-medium text-blue-700">
-                <option value="BE">พ.ศ.</option>
-                <option value="AD">ค.ศ.</option>
-            </select>
-        </div>
-        
-        <div class="flex gap-3 items-end">
-            <div class="w-1/2">
-                <label class="block text-sm mb-1 font-medium text-green-800">จำนวนที่เติม</label>
-                <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="ระบุจำนวน">
+          <div>
+            <h3 class="font-semibold mb-2 flex items-center gap-2">📦 สต็อกปัจจุบัน <span class="text-xs font-normal text-slate-500">(เลือกจำนวนที่จะตัดออก)</span></h3>
+            <div class="overflow-x-auto rounded-lg border">
+              <table class="min-w-full text-sm">
+                <thead class="bg-slate-100">
+                  <tr>
+                    <th class="p-3 text-left">Lot EXP (ว/ด/ป)</th>
+                    <th class="p-3 text-center">มีอยู่</th>
+                    <th class="p-3 text-center">ตัดออก (Used)</th>
+                  </tr>
+                </thead>
+                <tbody id="stockBody" class="divide-y"></tbody>
+              </table>
             </div>
-            <button id="addNewBtn" class="btn primary bg-green-600 border-green-600 w-1/2">+ เพิ่มรายการ</button>
-        </div>
+          </div>
 
-        <div id="newList" class="mt-3 space-y-2"></div>
-        <div id="newEmpty" class="text-center text-xs text-slate-400 mt-2 p-2 border border-dashed rounded bg-white/50">— ยังไม่มีรายการยาเข้าใหม่ —</div>
+          <div>
+             <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-green-700">➕ เพิ่มยาเข้าใหม่ (ใส่คืนกล่อง)</h3>
+             </div>
+             <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                <label class="block text-sm mb-1 font-medium text-green-800">วันหมดอายุ (EXP)</label>
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <select id="inputD" class="border rounded p-2 bg-white col-span-1 text-center"></select>
+                    <select id="inputM" class="border rounded p-2 bg-white col-span-1 text-center"></select>
+                    <select id="inputY" class="border rounded p-2 bg-white col-span-1 text-center font-medium text-slate-700"></select>
+                </div>
+                <div class="flex gap-3 items-end">
+                    <div class="w-1/2">
+                        <label class="block text-sm mb-1 font-medium text-green-800">จำนวนที่เติม</label>
+                        <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="ระบุจำนวน">
+                    </div>
+                    <button id="addNewBtn" class="btn primary bg-green-600 border-green-600 w-1/2">+ เพิ่มรายการ</button>
+                </div>
+                <div id="newList" class="mt-3 space-y-2"></div>
+                <div id="newEmpty" class="text-center text-xs text-slate-400 mt-2 p-2 border border-dashed rounded bg-white/50">— ยังไม่มีรายการยาเข้าใหม่ —</div>
+             </div>
+          </div>
+          
+          <!-- ปุ่มพักรายการ -->
+          <button id="addToCartBtn" class="btn w-full py-3 text-blue-700 border-blue-300 bg-white font-semibold hover:bg-blue-50 shadow-sm">
+             📥 พักรายการนี้ (ไว้ส่งพร้อมกัน)
+          </button>
       </div>
     </div>
-
-    <div class="mt-8">
-      <button id="submitBtn" class="btn primary w-full text-lg py-3 shadow-lg shadow-blue-200">✅ บันทึกข้อมูล</button>
-      <div id="saveMsg" class="text-center mt-2 text-sm text-slate-500 min-h-[20px]"></div>
+    
+    <!-- ส่วนตะกร้า (Cart) -->
+    <div id="cartSection" class="hidden mt-8 border-t-2 border-slate-200 pt-6">
+        <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+           🛒 รายการที่รอส่ง <span id="cartCount" class="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">0</span>
+        </h3>
+        <div class="bg-slate-50 border rounded-xl overflow-hidden mb-4">
+           <table class="w-full text-sm">
+               <thead class="bg-slate-200 text-slate-600">
+                   <tr>
+                       <th class="p-3 text-left">ชื่อยา</th>
+                       <th class="p-3 text-center">ตัดออก</th>
+                       <th class="p-3 text-center">เพิ่มใหม่</th>
+                       <th class="p-3 w-10"></th>
+                   </tr>
+               </thead>
+               <tbody id="cartBody" class="divide-y divide-slate-200"></tbody>
+           </table>
+        </div>
+        
+        <button id="saveAllBtn" class="btn primary w-full text-lg py-4 shadow-xl shadow-blue-200 font-bold animate-pulse">
+            ✅ ยืนยันบันทึกทั้งหมด
+        </button>
+        <div id="saveMsg" class="text-center mt-2 text-sm text-slate-500 min-h-[20px]"></div>
     </div>
+
   </section>
 
   <section id="view-output" class="card p-4 hidden">
+    <!-- ... existing output view code ... -->
     <div class="flex items-center justify-between mb-3 border-b pb-3">
       <h2 class="text-xl font-semibold">สรุปวันหมดอายุ</h2>
       <div class="flex items-center gap-2">
@@ -152,13 +174,15 @@
   </section>
 </div>
 
+<!-- ... existing modals ... -->
 <div id="qrModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm text-center shadow-2xl">
       <h3 class="text-lg font-semibold mb-3">QR Code สำหรับกล่องนี้</h3>
       <div id="qrBox" class="mb-4 flex justify-center p-2 bg-white"></div>
+      <div id="qrBoxName" class="font-bold text-blue-800 mb-2"></div>
       <input id="qrLink" class="border rounded px-3 py-2 w-full text-xs mb-3 text-slate-500 bg-slate-100" readonly>
       <div class="flex justify-center gap-2">
-        <button id="qrCopy" class="btn text-sm">คัดลอก</button>
+        <button id="qrCopy" class="btn text-sm">คัดลอกลิงก์</button>
         <button id="qrClose" class="btn text-sm">ปิด</button>
       </div>
     </div>
@@ -169,15 +193,15 @@
         <div class="text-center mb-4">
             <div class="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mb-3">✓</div>
             <h3 class="text-2xl font-bold text-slate-800">บันทึกสำเร็จ!</h3>
-            <p class="text-slate-500 text-sm">ข้อมูลถูกส่งไปยัง Google Sheet แล้ว</p>
+            <p class="text-slate-500 text-sm">ข้อมูลทั้งหมดถูกส่งเรียบร้อยแล้ว</p>
         </div>
         
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-left">
             <div class="flex items-center gap-2 mb-2 text-amber-800 font-bold border-b border-amber-200 pb-1">
-                <span>⚠️ ยาที่ใกล้หมดอายุที่สุดในกล่องนี้</span>
+                <span>⚠️ ยาที่ใกล้หมดอายุที่สุด (รวมทุกรายการ)</span>
             </div>
             <div id="modalWarnContent" class="text-sm space-y-1 text-slate-700">
-                </div>
+            </div>
         </div>
 
         <button onclick="closeSuccessModal()" class="w-full btn primary py-3 text-lg">รับทราบ / ปิด</button>
@@ -196,13 +220,14 @@
 
 <script>
 // ===== CONFIG =====
-const API_BASE = 'https://script.google.com/macros/s/AKfycbyyTKnYTnI-mq6LZ7kqMNS0XZL1LGcEU1PIueUfbuHnbNYeOn_eWM0izZvkFb7DhvE8/exec'; // **ใส่ Link API ของคุณที่นี่**
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyyTKnYTnI-mq6LZ7kqMNS0XZL1LGcEU1PIueUfbuHnbNYeOn_eWM0izZvkFb7DhvE8/exec';
 
 // ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
 let currentLots = [];
 let useInputs   = {}; 
 let newLotsPend = [];
+let cart = []; // เก็บรายการยาที่รอส่ง
 
 // ===== Helpers : Date & Format =====
 function initDateSelectors(){
@@ -210,37 +235,67 @@ function initDateSelectors(){
     for(let i=1; i<=31; i++){
         const o=document.createElement('option'); o.value=i; o.text=i; dSel.appendChild(o);
     }
+    
     const mSel = document.getElementById('inputM');
     const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const enMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    
     thMonth.forEach((m,i)=>{
-        const o=document.createElement('option'); o.value=i+1; o.text=m; mSel.appendChild(o);
+        const o=document.createElement('option'); 
+        o.value=i+1; 
+        o.text = `${m} - ${enMonth[i]}`; 
+        mSel.appendChild(o);
     });
+    
+    const ySel = document.getElementById('inputY');
+    const currentYear = new Date().getFullYear();
+    
+    for(let i = -2; i <= 15; i++){
+        const yAD = currentYear + i;
+        const yBE = yAD + 543;
+        const o = document.createElement('option');
+        o.value = yAD; 
+        o.text = `${yBE} (${yAD})`; 
+        ySel.appendChild(o);
+        
+        if(i === 0) o.selected = true; 
+    }
+
     const now = new Date();
     dSel.value = now.getDate();
     mSel.value = now.getMonth()+1;
-    document.getElementById('inputY').value = now.getFullYear() + 543; // Default เป็น พ.ศ.
-    document.getElementById('inputType').value = 'BE';
+    ySel.value = now.getFullYear();
 }
 
 function getInputDateISO(){
     const d = document.getElementById('inputD').value.padStart(2,'0');
     const m = document.getElementById('inputM').value.padStart(2,'0');
-    let y = parseInt(document.getElementById('inputY').value) || 0;
-    const type = document.getElementById('inputType').value;
+    const y = document.getElementById('inputY').value; 
     
-    if(y === 0) return '';
-    if(type === 'BE') y = y - 543; 
-    
+    if(!y) return '';
     return `${y}-${m}-${d}`;
 }
 
 function formatThaiDate(isoStr){
     if(!isoStr) return '-';
     try{
-        const [y,m,d] = isoStr.split('-');
+        const [yStr,mStr,dStr] = isoStr.split('-');
+        
+        const d = parseInt(dStr);
+        const m = parseInt(mStr);
+        const y = parseInt(yStr);
+
         const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-        const yearThai = parseInt(y) + 543;
-        return `${parseInt(d)} ${thMonth[parseInt(m)-1]} ${yearThai}`;
+        const enMonth = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        
+        const yearThai = y + 543;
+        const yearThaiShort = String(yearThai).slice(-2);
+        const yearEngShort = String(y).slice(-2);
+
+        const thaiPart = `${d} ${thMonth[m-1]} ${yearThaiShort}`;
+        const engPart = `${d} ${enMonth[m-1]} ${yearEngShort}`;
+
+        return `${thaiPart} <span class="text-slate-400 text-xs">(${engPart})</span>`;
     }catch(e){ return isoStr; }
 }
 
@@ -269,7 +324,7 @@ async function loadBoxes(){
 
   const selForm = document.getElementById('boxSelect'); selForm.innerHTML = '';
   const selView = document.getElementById('boxViewSelect'); selView.innerHTML = '';
-   
+    
   boxes.forEach(b=>{
     selForm.add(new Option(b,b));
     selView.add(new Option(b,b));
@@ -295,32 +350,86 @@ async function loadItems(){
 
 function makeStepper(expISO, maxQty){
   const wrap=document.createElement('div'); wrap.className='stepper justify-center';
+  
+  const updateDisplay = (usedVal) => {
+      const displayEl = document.getElementById(`stock-val-${expISO}`);
+      const rowEl = document.getElementById(`row-${expISO}`);
+      if(displayEl){
+          const remain = maxQty - usedVal;
+          displayEl.textContent = remain;
+          if(usedVal > 0){
+              displayEl.classList.add('text-blue-600');
+              if(rowEl) rowEl.classList.add('bg-blue-50');
+          } else {
+              displayEl.classList.remove('text-blue-600');
+              if(rowEl) rowEl.classList.remove('bg-blue-50');
+          }
+      }
+  };
+
   const minus=document.createElement('button'); minus.textContent='−';
   const input=document.createElement('input'); input.type='number'; input.min='0'; input.max=String(maxQty); input.value=String(useInputs[expISO]||0);
-   
+    
   const clamp=()=>{ 
       let v=parseInt(input.value)||0; if(v<0)v=0; if(v>maxQty)v=maxQty; 
       input.value=String(v); useInputs[expISO]=v; 
+      updateDisplay(v); 
   };
+  
   minus.onclick=(e)=>{ e.preventDefault(); input.value=String(Math.max(0,(parseInt(input.value)||0)-1)); clamp(); };
   const plus=document.createElement('button'); plus.textContent='+';
   plus.onclick =(e)=>{ e.preventDefault(); input.value=String(Math.min(maxQty,(parseInt(input.value)||0)+1)); clamp(); };
   input.onchange = clamp;
+  
   wrap.append(minus,input,plus);
   return wrap;
 }
 
 function renderStockTable(){
   const tb=document.getElementById('stockBody'); tb.innerHTML='';
-  if(!currentLots.length){
+  
+  const displayMap = new Map();
+  currentLots.forEach(l => {
+      displayMap.set(l.expISO, { expISO: l.expISO, qty: Number(l.qty), isNew: false, addedQty: 0 });
+  });
+  newLotsPend.forEach(n => {
+      if(displayMap.has(n.exp)){
+          const existing = displayMap.get(n.exp);
+          existing.qty += Number(n.qty);
+          existing.addedQty += Number(n.qty);
+      } else {
+          displayMap.set(n.exp, { expISO: n.exp, qty: Number(n.qty), isNew: true, addedQty: Number(n.qty) });
+      }
+  });
+
+  const combinedLots = Array.from(displayMap.values()).sort((a,b) => a.expISO.localeCompare(b.expISO));
+
+  if(!combinedLots.length){
     tb.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">✅ ไม่มียาคงเหลือในระบบ หรือ ยังไม่ได้เลือกยา</td></tr>`;
     return;
   }
-  currentLots.forEach(l=>{
+
+  combinedLots.forEach(l => {
     const tr=document.createElement('tr');
-    tr.innerHTML = `<td class="p-3 text-sm text-slate-700">${formatThaiDate(l.expISO)}</td>
-                    <td class="p-3 text-center font-medium">${l.qty}</td>`;
-     
+    tr.id = `row-${l.expISO}`;
+    
+    let dateHtml = formatThaiDate(l.expISO);
+    if(l.isNew) dateHtml += `<span class="badge-new">NEW</span>`;
+
+    const currentUsed = useInputs[l.expISO] || 0;
+    const currentRemain = l.qty - currentUsed;
+    
+    let qtyHtml = `<span id="stock-val-${l.expISO}" class="font-bold text-lg transition-colors ${currentUsed>0?'text-blue-600':''}">${currentRemain}</span>`;
+    
+    if(l.addedQty > 0 && !l.isNew){
+        qtyHtml += `<div class="text-xs text-green-600">(+${l.addedQty})</div>`;
+    }
+
+    if(currentUsed > 0) tr.classList.add('bg-blue-50');
+
+    tr.innerHTML = `<td class="p-3 text-sm text-slate-700">${dateHtml}</td>
+                    <td class="p-3 text-center">${qtyHtml}</td>`;
+      
     const tdStep = document.createElement('td'); tdStep.className='p-2';
     tdStep.appendChild(makeStepper(l.expISO, l.qty));
     tr.appendChild(tdStep);
@@ -340,12 +449,13 @@ async function loadLots(){
 function addNewLot(){
   const expISO = getInputDateISO();
   const qty = parseInt(document.getElementById('addQty').value)||0;
-   
+    
   if(!expISO || expISO.length < 10){ alert('โปรดตรวจสอบวันที่'); return; }
   if(qty<=0){ alert('โปรดระบุจำนวน'); return; }
-   
+    
   newLotsPend.push({exp: expISO, qty}); 
   renderNewList();
+  renderStockTable();
   document.getElementById('addQty').value='';
 }
 
@@ -353,70 +463,192 @@ function renderNewList(){
   const wrap=document.getElementById('newList'); const empty=document.getElementById('newEmpty'); wrap.innerHTML='';
   if(!newLotsPend.length){ empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
-   
+    
   newLotsPend.forEach((n,idx)=>{ 
       const row=document.createElement('div'); 
       row.className='flex items-center justify-between p-2 border rounded bg-white shadow-sm'; 
       row.innerHTML=`<div class="text-sm"><span class="font-bold text-green-700">เข้าใหม่:</span> ${formatThaiDate(n.exp)} <span class="mx-2 text-slate-300">|</span> จำนวน: <b>${n.qty}</b></div>`; 
       const del=document.createElement('button'); del.className='text-red-500 hover:text-red-700 text-sm px-2'; del.textContent='ลบ'; 
-      del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); }; 
+      del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); renderStockTable(); }; 
       row.appendChild(del); wrap.appendChild(row); 
   });
 }
 
-async function submitData(){
-  const btn = document.getElementById('submitBtn');
-  const msg = document.getElementById('saveMsg');
-  const dateVisit = document.getElementById('dateVisit').value || new Date().toISOString().slice(0,10);
-  const inspector = document.getElementById('inspector').value;
-  const reason = getReason();
-  const drug = document.getElementById('drugSelect').value;
+// ===== Cart Logic =====
+function addToCart(){
+    const drug = document.getElementById('drugSelect').value;
+    const reason = getReason();
 
-  if(!currentBox) return alert('โปรดเลือกกล่อง');
-  if(!drug) return alert('โปรดเลือกยา');
-  if(!reason) return alert('โปรดเลือกเหตุผล');
+    // Validations (Validate แค่ว่าเลือกยาหรือยัง ส่วน box/inspector จะเช็คตอนส่งจริงทีเดียวก็ได้)
+    if(!currentBox) return alert('โปรดเลือกกล่อง');
+    if(!drug) return alert('โปรดเลือกยา');
+    if(!reason) return alert('โปรดเลือกเหตุผล'); // เช็คเหตุผลไว้ก่อน เพื่อความชัวร์
 
-  const usedLots = Object.entries(useInputs).filter(([_,q])=>q>0).map(([exp,qty])=>({exp, qtyUsed:qty}));
-  const stockMap={}; currentLots.forEach(l=>{ stockMap[l.expISO]=(stockMap[l.expISO]||0)+Number(l.qty); });
-  const addMap={}; newLotsPend.forEach(n=>{ addMap[n.exp]=(addMap[n.exp]||0)+Number(n.qty); });
-  let errorHtml = '';
-  usedLots.forEach(u=>{
-      const have = (stockMap[u.exp]||0) + (addMap[u.exp]||0);
-      if(u.qtyUsed > have) errorHtml += `<li>Exp ${formatThaiDate(u.exp)}: ต้องการ ${u.qtyUsed} แต่มี ${have}</li>`;
-  });
-  if(errorHtml){
-      document.getElementById('modalNeedAddMsg').innerHTML = `<ul class="list-disc pl-5 space-y-1">${errorHtml}</ul>`;
-      document.getElementById('modalNeedAdd').classList.remove('hidden');
-      return;
-  }
+    // เช็คว่ายานี้มีใน Cart แล้วหรือยัง
+    if(cart.find(item => item.drug === drug)){
+        return alert(`ยา "${drug}" อยู่ในรายการรอส่งแล้ว หากต้องการแก้ไขให้ลบรายการเดิมออกก่อน`);
+    }
 
-  // ส่งข้อมูล
-  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-  try{
-      const res = await apiPost({ box:currentBox, dateVisit, drug, reason, inspector, usedLots, newLots:newLotsPend });
-      
-      if(res.ok){
-          useInputs={}; newLotsPend=[]; renderNewList(); await loadLots();
-          showSuccessModal(res.nearest); 
-      } else {
-          toast(msg, 'Error: '+res.error);
-      }
-  }catch(e){
-      toast(msg, 'Connection Failed: ' + e);
-  }
-  btn.disabled = false; btn.textContent = '✅ บันทึกข้อมูล';
+    const usedLots = Object.entries(useInputs).filter(([_,q])=>q>0).map(([exp,qty])=>({exp, qtyUsed:qty}));
+    
+    // ตรวจสอบสต็อก
+    const stockMap={}; currentLots.forEach(l=>{ stockMap[l.expISO]=(stockMap[l.expISO]||0)+Number(l.qty); });
+    const addMap={}; newLotsPend.forEach(n=>{ addMap[n.exp]=(addMap[n.exp]||0)+Number(n.qty); });
+    
+    let errorHtml = '';
+    usedLots.forEach(u=>{
+        const have = (stockMap[u.exp]||0) + (addMap[u.exp]||0);
+        if(u.qtyUsed > have) errorHtml += `<li>Exp ${formatThaiDate(u.exp)}: ต้องการ ${u.qtyUsed} แต่มี ${have}</li>`;
+    });
+    if(errorHtml){
+        document.getElementById('modalNeedAddMsg').innerHTML = `<ul class="list-disc pl-5 space-y-1">${errorHtml}</ul>`;
+        document.getElementById('modalNeedAdd').classList.remove('hidden');
+        return;
+    }
+
+    // ถ้าไม่มีการเปลี่ยนแปลงอะไรเลย (ไม่ตัด ไม่เพิ่ม)
+    if(usedLots.length === 0 && newLotsPend.length === 0){
+        return alert('กรุณาระบุจำนวนที่ใช้ หรือรายการยาเข้าใหม่');
+    }
+
+    // เพิ่มลง Cart
+    cart.push({
+        drug,
+        usedLots,
+        newLots: [...newLotsPend], // Clone array
+        // ข้อมูลอื่นๆ (Inspector, Reason, Date) จะดึงสดตอนกด Save All เพื่อให้แก้ไขได้
+    });
+
+    // Reset ส่วนของยา
+    resetDrugSection();
+    renderCart();
+    
+    // Scroll ลงไปที่ Cart
+    document.getElementById('cartSection').classList.remove('hidden');
+    document.getElementById('cartSection').scrollIntoView({behavior: 'smooth'});
+}
+
+function resetDrugSection(){
+    document.getElementById('drugSelect').value = '';
+    currentLots = [];
+    useInputs = {};
+    newLotsPend = [];
+    renderStockTable();
+    renderNewList();
+}
+
+function renderCart(){
+    const tbody = document.getElementById('cartBody');
+    const countBadge = document.getElementById('cartCount');
+    const section = document.getElementById('cartSection');
+
+    if(cart.length === 0){
+        section.classList.add('hidden');
+        return;
+    }
+    section.classList.remove('hidden');
+    countBadge.textContent = cart.length;
+    document.getElementById('saveAllBtn').innerHTML = `✅ ยืนยันบันทึกทั้งหมด (${cart.length} รายการ)`;
+
+    tbody.innerHTML = '';
+    cart.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        
+        let usedText = item.usedLots.length > 0 ? item.usedLots.reduce((acc,cur)=>acc+cur.qtyUsed, 0) : '-';
+        let addText = item.newLots.length > 0 ? item.newLots.reduce((acc,cur)=>acc+cur.qty, 0) : '-';
+
+        tr.innerHTML = `
+            <td class="p-3 font-medium text-blue-900">${item.drug}</td>
+            <td class="p-3 text-center text-red-600 font-bold">${usedText}</td>
+            <td class="p-3 text-center text-green-600 font-bold">${addText}</td>
+            <td class="p-3 text-right">
+                <button class="text-slate-400 hover:text-red-500 text-lg" onclick="removeCart(${idx})">×</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function removeCart(idx){
+    if(confirm('ลบรายการนี้ออกจากตะกร้า?')){
+        cart.splice(idx, 1);
+        renderCart();
+    }
+}
+
+async function saveAll(){
+    const btn = document.getElementById('saveAllBtn');
+    const msg = document.getElementById('saveMsg');
+    
+    // ดึงค่า Global ณ ปัจจุบัน
+    const dateVisit = document.getElementById('dateVisit').value || new Date().toISOString().slice(0,10);
+    const inspector = document.getElementById('inspector').value;
+    const reason = getReason();
+
+    if(!inspector) return alert('โปรดเลือกผู้ตรวจสอบ');
+    // Reason ถูกเช็คตอน Add to Cart แล้ว แต่เช็คอีกทีก็ได้
+    if(!reason) return alert('โปรดเลือกเหตุผล');
+
+    btn.disabled = true;
+    
+    let successCount = 0;
+    let lastNearest = null;
+
+    // Loop ส่งทีละรายการ
+    for(let i=0; i<cart.length; i++){
+        const item = cart[i];
+        btn.textContent = `⏳ กำลังส่งข้อมูล (${i+1}/${cart.length})...`;
+        
+        try {
+            const res = await apiPost({
+                box: currentBox,
+                dateVisit,
+                inspector,
+                reason,
+                drug: item.drug,
+                usedLots: item.usedLots,
+                newLots: item.newLots
+            });
+            
+            if(res.ok){
+                successCount++;
+                if(res.nearest) lastNearest = res.nearest; // เก็บ nearest ล่าสุดไว้
+            } else {
+                toast(msg, `Error sending ${item.drug}: ${res.error}`);
+            }
+        } catch(e) {
+            toast(msg, `Connection failed for ${item.drug}`);
+        }
+    }
+
+    if(successCount === cart.length){
+        // สำเร็จทั้งหมด
+        cart = [];
+        renderCart();
+        showSuccessModal(lastNearest);
+        await loadLots(); // Refresh หน้าจอปัจจุบันเผื่อค้างอยู่
+    } else {
+        alert(`บันทึกสำเร็จ ${successCount} จาก ${cart.length} รายการ กรุณาตรวจสอบรายการที่เหลือ`);
+        // ในเคสจริงอาจจะต้องลบรายการที่สำเร็จแล้วออกจาก Cart แต่เพื่อความง่าย ให้ User ลบเองหรือกดส่งใหม่
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = `✅ ยืนยันบันทึกทั้งหมด (${cart.length} รายการ)`;
 }
 
 function showSuccessModal(item){
     const content = document.getElementById('modalWarnContent');
+    // เนื่องจากส่งหลายรายการ item ที่ส่งมาจะเป็นแค่ของตัวล่าสุด
+    // ข้อความจึงควรเป็นกลางๆ หรือแจ้งเฉพาะตัวล่าสุด
     if(item){
         content.innerHTML = `
+            <div class="text-xs text-slate-500 mb-1">ยาที่ใกล้หมดอายุที่สุด (อัปเดตล่าสุด):</div>
             <div class="font-bold text-lg text-slate-800">${item.drug}</div>
             <div>วันหมดอายุ: <span class="text-red-600 font-bold">${formatThaiDate(item.expISO)}</span></div>
             <div class="text-slate-500 text-xs">เหลือเวลาอีก ${item.days} วัน</div>
         `;
     } else {
-        content.innerHTML = `<div class="text-green-600">✅ ไม่มีรายการยาใกล้หมดอายุในเร็วๆ นี้</div>`;
+        content.innerHTML = `<div class="text-green-600">✅ ข้อมูลอัปเดตเรียบร้อย</div>`;
     }
     document.getElementById('successModal').classList.remove('hidden');
 }
@@ -432,21 +664,21 @@ function getReason(){
     return r.value;
 }
 
-// ===== View Output =====
+// ===== View Output (เหมือนเดิม) =====
 async function loadNear(){
   if(!currentBox) return;
   const days = Number(document.getElementById('nearDays').value)||1000;
   const list = document.getElementById('nearList'); 
   list.innerHTML = '<div class="text-center p-4 text-slate-400">Loading...</div>';
-   
+    
   const data = await apiGet({action:'near', box: currentBox, days});
   list.innerHTML='';
-   
+    
   if(!data.rows || !data.rows.length){
       list.innerHTML='<div class="text-center p-5 border rounded bg-slate-50">✅ เยี่ยมมาก! ไม่มียาใกล้หมดอายุในช่วงนี้</div>';
       return;
   }
-   
+    
   data.rows.forEach((r,idx)=>{
       const isUrgent = r.days < 90; 
       const el=document.createElement('div');
@@ -475,6 +707,14 @@ window.addEventListener('DOMContentLoaded', ()=>{
     initDateSelectors();
     document.getElementById('dateVisit').value = new Date().toISOString().slice(0,10);
     
+    const urlParams = new URLSearchParams(window.location.search);
+    const boxParam = urlParams.get('box');
+    if(boxParam){
+        currentBox = boxParam;
+        localStorage.setItem('em_box', currentBox);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     document.querySelectorAll('input[name="reason"]').forEach(r=>{
         r.addEventListener('change', (e)=>{
             const txt = document.getElementById('reasonOther');
@@ -491,13 +731,19 @@ window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('boxViewSelect').onchange=(e)=>{ currentBox=e.target.value; localStorage.setItem('em_box',currentBox); setBoxBadge(); loadNear(); };
     document.getElementById('drugSelect').onchange=loadLots;
     document.getElementById('addNewBtn').onclick=addNewLot;
-    document.getElementById('submitBtn').onclick=submitData;
+    
+    // เปลี่ยน Event Handler
+    document.getElementById('addToCartBtn').onclick=addToCart;
+    document.getElementById('saveAllBtn').onclick=saveAll;
+    
     document.getElementById('refreshNearBtn').onclick=loadNear;
     
     document.getElementById('qrBtn').onclick = ()=>{
+      if(!currentBox) return alert('กรุณาเลือกกล่องยาก่อนสร้าง QR Code');
       const url = window.location.href.split('?')[0]; 
-      const appUrl = url + '?view=select';
+      const appUrl = url + '?box=' + encodeURIComponent(currentBox);
       document.getElementById('qrBox').innerHTML='';
+      document.getElementById('qrBoxName').textContent = '📍 ' + currentBox;
       new QRCode(document.getElementById('qrBox'),{text:appUrl,width:180,height:180});
       document.getElementById('qrLink').value=appUrl;
       document.getElementById('qrModal').classList.remove('hidden');
@@ -505,7 +751,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('qrClose').onclick=()=>document.getElementById('qrModal').classList.add('hidden');
     document.getElementById('qrCopy').onclick=()=>{
         navigator.clipboard.writeText(document.getElementById('qrLink').value);
-        alert('Copied!');
+        alert('คัดลอกลิงก์แล้ว');
     };
 });
 </script>
