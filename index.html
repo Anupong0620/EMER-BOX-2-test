@@ -716,64 +716,99 @@ async function loadNear(){
       // 2. แปลงเป็นอาร์เรย์และเรียงลำดับกล่องที่วิกฤตที่สุดขึ้นก่อน
       const summaryList = Object.values(soonestByBox).sort((a,b) => a.days - b.days);
       
-      // 3. สร้าง UI แบบ Grid Card Dashboard
-      const grid = document.createElement('div');
-      grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mt-2';
+      // 3. จัดกลุ่มข้อมูลตามแผนก (Grouping)
+      const groups = { 'IPD': [], 'ER': [], 'LR': [], 'อื่นๆ': [] };
       
-      summaryList.forEach((r) => {
-          const isUrgent = r.days < 90; 
-          const isWarning = r.days >= 90 && r.days < 180;
-          
-          let statusColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-          let statusBadge = 'bg-emerald-500';
-          let icon = '✅';
-          
-          if(isUrgent) { 
-              statusColor = 'bg-rose-50 text-rose-700 border-rose-200'; 
-              statusBadge = 'bg-rose-500';
-              icon = '🚨'; 
-          } else if(isWarning) { 
-              statusColor = 'bg-amber-50 text-amber-700 border-amber-200'; 
-              statusBadge = 'bg-amber-500';
-              icon = '⚠️'; 
+      summaryList.forEach(r => {
+          const boxName = String(r.box).toUpperCase();
+          if (boxName.startsWith('IPD')) {
+              groups['IPD'].push(r);
+          } else if (boxName.startsWith('ER') || boxName.startsWith('EMS') || boxName.startsWith('OSCC')) {
+              groups['ER'].push(r);
+          } else if (boxName.startsWith('LR')) {
+              groups['LR'].push(r);
+          } else {
+              groups['อื่นๆ'].push(r);
           }
-
-          const card = document.createElement('div');
-          card.className = `relative overflow-hidden p-4 border rounded-2xl bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between group`;
-          
-          card.innerHTML = `
-          <!-- แถบสีสถานะด้านซ้าย -->
-          <div class="absolute left-0 top-0 w-1.5 h-full ${statusBadge} transition-all group-hover:w-2"></div>
-          
-          <div class="flex justify-between items-start mb-3 pl-3">
-             <div class="flex items-center gap-2">
-                <span class="text-xl drop-shadow-sm">📦</span>
-                <span class="font-bold text-lg text-slate-800 tracking-tight">${r.box}</span>
-             </div>
-             <div class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shadow-sm ${statusColor}">
-                <span>${icon}</span>
-                <span>อีก ${r.days} วัน</span>
-             </div>
-          </div>
-          
-          <div class="pl-3">
-             <div class="text-[16px] font-bold text-blue-900 mb-1 leading-snug line-clamp-2" title="${r.drug}">${r.drug}</div>
-             
-             <div class="flex items-end justify-between mt-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div>
-                   <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">วันหมดอายุ (EXP)</div>
-                   <div class="text-[15px] font-semibold text-slate-700">${formatThaiDate(r.expISO)}</div>
-                </div>
-                <div class="text-right">
-                   <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">คงเหลือ</div>
-                   <div class="text-xl font-black text-blue-700 leading-none drop-shadow-sm">${r.qty}</div>
-                </div>
-             </div>
-          </div>
-          `;
-          grid.appendChild(card);
       });
-      list.appendChild(grid);
+      
+      // 4. สร้าง UI แยกตามกลุ่ม
+      const displayOrder = ['IPD', 'ER', 'LR', 'อื่นๆ'];
+      const icons = { 'IPD': '🛏️', 'ER': '🚑', 'LR': '👶', 'อื่นๆ': '📁' };
+
+      displayOrder.forEach(groupName => {
+          const items = groups[groupName];
+          if (items.length === 0) return; // ไม่แสดงกลุ่มที่ไม่มีข้อมูล
+
+          const section = document.createElement('div');
+          section.className = 'mb-8 bg-white/50 rounded-2xl p-1';
+          
+          section.innerHTML = `
+              <h3 class="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2 border-b-2 border-blue-200/60 pb-2 pl-1">
+                  <span class="text-2xl drop-shadow-sm">${icons[groupName]}</span> แผนก ${groupName}
+              </h3>
+          `;
+
+          const grid = document.createElement('div');
+          grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+      
+          items.forEach((r) => {
+              const isUrgent = r.days < 90; 
+              const isWarning = r.days >= 90 && r.days < 180;
+              
+              let statusColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+              let statusBadge = 'bg-emerald-500';
+              let icon = '✅';
+              
+              if(isUrgent) { 
+                  statusColor = 'bg-rose-50 text-rose-700 border-rose-200'; 
+                  statusBadge = 'bg-rose-500';
+                  icon = '🚨'; 
+              } else if(isWarning) { 
+                  statusColor = 'bg-amber-50 text-amber-700 border-amber-200'; 
+                  statusBadge = 'bg-amber-500';
+                  icon = '⚠️'; 
+              }
+
+              const card = document.createElement('div');
+              card.className = `relative overflow-hidden p-4 border rounded-2xl bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between group`;
+              
+              card.innerHTML = `
+              <!-- แถบสีสถานะด้านซ้าย -->
+              <div class="absolute left-0 top-0 w-1.5 h-full ${statusBadge} transition-all group-hover:w-2"></div>
+              
+              <div class="flex justify-between items-start mb-3 pl-3">
+                 <div class="flex items-center gap-2">
+                    <span class="text-xl drop-shadow-sm">📦</span>
+                    <span class="font-bold text-lg text-slate-800 tracking-tight">${r.box}</span>
+                 </div>
+                 <div class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shadow-sm ${statusColor}">
+                    <span>${icon}</span>
+                    <span>อีก ${r.days} วัน</span>
+                 </div>
+              </div>
+              
+              <div class="pl-3">
+                 <div class="text-[16px] font-bold text-blue-900 mb-1 leading-snug line-clamp-2" title="${r.drug}">${r.drug}</div>
+                 
+                 <div class="flex items-end justify-between mt-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div>
+                       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">วันหมดอายุ (EXP)</div>
+                       <div class="text-[15px] font-semibold text-slate-700">${formatThaiDate(r.expISO)}</div>
+                    </div>
+                    <div class="text-right">
+                       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">คงเหลือ</div>
+                       <div class="text-xl font-black text-blue-700 leading-none drop-shadow-sm">${r.qty}</div>
+                    </div>
+                 </div>
+              </div>
+              `;
+              grid.appendChild(card);
+          });
+          
+          section.appendChild(grid);
+          list.appendChild(section);
+      });
 
   } else {
       // โหมดดูกล่องเดียว (เหมือนเดิม แต่ปรับ UI ให้เข้ากัน)
