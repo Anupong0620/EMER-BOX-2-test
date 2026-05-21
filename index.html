@@ -154,7 +154,7 @@
         </div>
         
         <button id="saveAllBtn" class="btn primary w-full text-lg py-4 shadow-xl shadow-blue-200 font-bold animate-pulse">
-            ✅ ยืนยันบันทึกทั้งหมด
+           ✅ ยืนยันบันทึกทั้งหมด
         </button>
         <div id="saveMsg" class="text-center mt-2 text-sm text-slate-500 min-h-[20px]"></div>
     </div>
@@ -162,11 +162,11 @@
   </section>
 
   <section id="view-output" class="card p-4 hidden">
-    <!-- ... existing output view code ... -->
     <div class="flex items-center justify-between mb-3 border-b pb-3">
       <h2 class="text-xl font-semibold">สรุปวันหมดอายุ</h2>
       <div class="flex items-center gap-2">
-        <select id="boxViewSelect" class="border rounded px-2 py-1 text-sm bg-slate-50"></select>
+        <!-- Dropdown ดูสรุป -->
+        <select id="boxViewSelect" class="border rounded px-2 py-1 text-sm bg-slate-50 font-semibold text-blue-800"></select>
         <button id="refreshNearBtn" class="btn text-sm">↻</button>
       </div>
     </div>
@@ -224,7 +224,7 @@
 
 <script>
 // ===== CONFIG =====
-const API_BASE = 'https://script.google.com/macros/s/AKfycbyyTKnYTnI-mq6LZ7kqMNS0XZL1LGcEU1PIueUfbuHnbNYeOn_eWM0izZvkFb7DhvE8/exec';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbzSVIwLJiknI44iCHm1ePbTe5IK5j8uxJx0huSkj0AE9iWnTpR-NF7_qitGtaEKFd51/exec';
 
 // ===== STATE =====
 let currentBox = localStorage.getItem('em_box') || '';
@@ -329,13 +329,19 @@ async function loadBoxes(){
   const selForm = document.getElementById('boxSelect'); selForm.innerHTML = '';
   const selView = document.getElementById('boxViewSelect'); selView.innerHTML = '';
     
+  // --- เพิ่มตัวเลือก "รวมทุกกล่อง" ในหน้าสรุป ---
+  selView.add(new Option('🌟 -- ดูรวมทุกกล่อง --', 'ALL'));
+
   boxes.forEach(b=>{
     selForm.add(new Option(b,b));
     selView.add(new Option(b,b));
   });
 
   if(currentBox && boxes.includes(currentBox)){
-      selForm.value=currentBox; selView.value=currentBox;
+      selForm.value = currentBox; 
+      // หน้าสรุปให้ default เป็นรวมทุกกล่อง หรือกล่องที่เลือกไว้ก็ได้
+      // ในที่นี้จะจำกล่องล่าสุดที่เลือกไว้ 
+      selView.value = currentBox;
   } else {
       currentBox = boxes[0]; selForm.value=currentBox; localStorage.setItem('em_box',currentBox);
   }
@@ -483,19 +489,16 @@ function addToCart(){
     const drug = document.getElementById('drugSelect').value;
     const reason = getReason();
 
-    // Validations (Validate แค่ว่าเลือกยาหรือยัง ส่วน box/inspector จะเช็คตอนส่งจริงทีเดียวก็ได้)
     if(!currentBox) return alert('โปรดเลือกกล่อง');
     if(!drug) return alert('โปรดเลือกยา');
-    if(!reason) return alert('โปรดเลือกเหตุผล'); // เช็คเหตุผลไว้ก่อน เพื่อความชัวร์
+    if(!reason) return alert('โปรดเลือกเหตุผล'); 
 
-    // เช็คว่ายานี้มีใน Cart แล้วหรือยัง
     if(cart.find(item => item.drug === drug)){
         return alert(`ยา "${drug}" อยู่ในรายการรอส่งแล้ว หากต้องการแก้ไขให้ลบรายการเดิมออกก่อน`);
     }
 
     const usedLots = Object.entries(useInputs).filter(([_,q])=>q>0).map(([exp,qty])=>({exp, qtyUsed:qty}));
     
-    // ตรวจสอบสต็อก
     const stockMap={}; currentLots.forEach(l=>{ stockMap[l.expISO]=(stockMap[l.expISO]||0)+Number(l.qty); });
     const addMap={}; newLotsPend.forEach(n=>{ addMap[n.exp]=(addMap[n.exp]||0)+Number(n.qty); });
     
@@ -510,24 +513,19 @@ function addToCart(){
         return;
     }
 
-    // ถ้าไม่มีการเปลี่ยนแปลงอะไรเลย (ไม่ตัด ไม่เพิ่ม)
     if(usedLots.length === 0 && newLotsPend.length === 0){
         return alert('กรุณาระบุจำนวนที่ใช้ หรือรายการยาเข้าใหม่');
     }
 
-    // เพิ่มลง Cart
     cart.push({
         drug,
         usedLots,
-        newLots: [...newLotsPend], // Clone array
-        // ข้อมูลอื่นๆ (Inspector, Reason, Date) จะดึงสดตอนกด Save All เพื่อให้แก้ไขได้
+        newLots: [...newLotsPend],
     });
 
-    // Reset ส่วนของยา
     resetDrugSection();
     renderCart();
     
-    // Scroll ลงไปที่ Cart
     document.getElementById('cartSection').classList.remove('hidden');
     document.getElementById('cartSection').scrollIntoView({behavior: 'smooth'});
 }
@@ -584,13 +582,11 @@ async function saveAll(){
     const btn = document.getElementById('saveAllBtn');
     const msg = document.getElementById('saveMsg');
     
-    // ดึงค่า Global ณ ปัจจุบัน
     const dateVisit = document.getElementById('dateVisit').value || new Date().toISOString().slice(0,10);
     const inspector = document.getElementById('inspector').value;
     const reason = getReason();
 
     if(!inspector) return alert('โปรดเลือกผู้ตรวจสอบ');
-    // Reason ถูกเช็คตอน Add to Cart แล้ว แต่เช็คอีกทีก็ได้
     if(!reason) return alert('โปรดเลือกเหตุผล');
 
     btn.disabled = true;
@@ -598,7 +594,6 @@ async function saveAll(){
     let successCount = 0;
     let lastNearest = null;
 
-    // Loop ส่งทีละรายการ
     for(let i=0; i<cart.length; i++){
         const item = cart[i];
         btn.textContent = `⏳ กำลังส่งข้อมูล (${i+1}/${cart.length})...`;
@@ -616,7 +611,7 @@ async function saveAll(){
             
             if(res.ok){
                 successCount++;
-                if(res.nearest) lastNearest = res.nearest; // เก็บ nearest ล่าสุดไว้
+                if(res.nearest) lastNearest = res.nearest;
             } else {
                 toast(msg, `Error sending ${item.drug}: ${res.error}`);
             }
@@ -626,14 +621,12 @@ async function saveAll(){
     }
 
     if(successCount === cart.length){
-        // สำเร็จทั้งหมด
         cart = [];
         renderCart();
         showSuccessModal(lastNearest);
-        await loadLots(); // Refresh หน้าจอปัจจุบันเผื่อค้างอยู่
+        await loadLots(); 
     } else {
         alert(`บันทึกสำเร็จ ${successCount} จาก ${cart.length} รายการ กรุณาตรวจสอบรายการที่เหลือ`);
-        // ในเคสจริงอาจจะต้องลบรายการที่สำเร็จแล้วออกจาก Cart แต่เพื่อความง่าย ให้ User ลบเองหรือกดส่งใหม่
     }
     
     btn.disabled = false;
@@ -642,8 +635,6 @@ async function saveAll(){
 
 function showSuccessModal(item){
     const content = document.getElementById('modalWarnContent');
-    // เนื่องจากส่งหลายรายการ item ที่ส่งมาจะเป็นแค่ของตัวล่าสุด
-    // ข้อความจึงควรเป็นกลางๆ หรือแจ้งเฉพาะตัวล่าสุด
     if(item){
         content.innerHTML = `
             <div class="text-xs text-slate-500 mb-1">ยาที่ใกล้หมดอายุที่สุด (อัปเดตล่าสุด):</div>
@@ -668,14 +659,24 @@ function getReason(){
     return r.value;
 }
 
-// ===== View Output (เหมือนเดิม) =====
+// ===== View Output (ปรับปรุงให้รองรับรวมทุกกล่อง) =====
 async function loadNear(){
-  if(!currentBox) return;
+  const viewMode = document.getElementById('boxViewSelect').value;
+  // ถ้าไม่ใช่ ALL แต่ไม่มีกล่องเลยให้ออก
+  if(viewMode !== 'ALL' && !currentBox) return; 
+
   const days = Number(document.getElementById('nearDays').value)||1000;
   const list = document.getElementById('nearList'); 
   list.innerHTML = '<div class="text-center p-4 text-slate-400">Loading...</div>';
     
-  const data = await apiGet({action:'near', box: currentBox, days});
+  let data;
+  // เช็คว่าผู้ใช้เลือกดูทุกกล่อง หรือ กล่องเดียว
+  if (viewMode === 'ALL') {
+      data = await apiGet({action: 'near_all', days});
+  } else {
+      data = await apiGet({action: 'near', box: viewMode, days});
+  }
+
   list.innerHTML='';
     
   if(!data.rows || !data.rows.length){
@@ -685,21 +686,26 @@ async function loadNear(){
     
   data.rows.forEach((r,idx)=>{
       const isUrgent = r.days < 90; 
+      // เพิ่มป้ายชื่อกล่อง หากเลือกโหมด ALL
+      const boxTag = viewMode === 'ALL' ? `<span class="bg-indigo-50 text-indigo-700 text-[11px] px-2 py-0.5 rounded-full border border-indigo-200 ml-2 whitespace-nowrap">📦 ${r.box}</span>` : '';
+
       const el=document.createElement('div');
+      // ไฮไลต์กล่องแรกเสมอ
       el.className=`p-3 border rounded-lg flex items-center justify-between bg-white shadow-sm ${idx===0 ? 'ring-2 ring-amber-300' : ''}`;
       el.innerHTML=`
       <div>
-        <div class="flex items-center gap-2 mb-1">
+        <div class="flex items-center flex-wrap gap-1 mb-1">
            ${idx===0 ? '<span class="badge-nearest">ใกล้สุด!</span>' : ''}
            <span class="font-bold text-slate-700">${r.drug}</span>
+           ${boxTag}
         </div>
         <div class="text-sm ${isUrgent?'text-red-600 font-medium':'text-slate-500'}">
-           EXP: ${formatThaiDate(r.expISO)} (${r.days} วัน)
+           EXP: ${formatThaiDate(r.expISO)} <span class="font-bold ml-1">(${r.days} วัน)</span>
         </div>
       </div>
       <div class="text-right bg-slate-100 px-3 py-1 rounded">
          <div class="text-xs text-slate-500">คงเหลือ</div>
-         <div class="font-bold text-lg">${r.qty}</div>
+         <div class="font-bold text-lg text-blue-900">${r.qty}</div>
       </div>
       `;
       list.appendChild(el);
@@ -731,15 +737,29 @@ window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('tab-form').onclick=()=>switchView('view-form');
     document.getElementById('tab-view').onclick=()=>{ switchView('view-output'); loadNear(); };
     
-    document.getElementById('boxSelect').onchange=(e)=>{ currentBox=e.target.value; localStorage.setItem('em_box',currentBox); setBoxBadge(); loadItems(); loadLots(); };
-    document.getElementById('boxViewSelect').onchange=(e)=>{ currentBox=e.target.value; localStorage.setItem('em_box',currentBox); setBoxBadge(); loadNear(); };
+    // จัดการ Event Select
+    document.getElementById('boxSelect').onchange=(e)=>{ 
+      currentBox=e.target.value; 
+      localStorage.setItem('em_box',currentBox); 
+      setBoxBadge(); 
+      loadItems(); loadLots(); 
+    };
+    
+    document.getElementById('boxViewSelect').onchange=(e)=>{ 
+      // ถ้าไม่ได้เลือก ALL ค่อยจำค่าลง LocalStorage
+      if(e.target.value !== 'ALL'){
+         currentBox=e.target.value; 
+         localStorage.setItem('em_box',currentBox); 
+         setBoxBadge();
+      }
+      loadNear(); 
+    };
+
     document.getElementById('drugSelect').onchange=loadLots;
     document.getElementById('addNewBtn').onclick=addNewLot;
     
-    // เปลี่ยน Event Handler
     document.getElementById('addToCartBtn').onclick=addToCart;
     document.getElementById('saveAllBtn').onclick=saveAll;
-    
     document.getElementById('refreshNearBtn').onclick=loadNear;
     
     document.getElementById('qrBtn').onclick = ()=>{
