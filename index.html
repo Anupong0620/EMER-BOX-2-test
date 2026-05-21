@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Sarabun', sans-serif; }
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
     .btn{border-radius:.5rem;padding:.5rem .9rem;border:1px solid #e5e7eb;background:#f8fafc; transition: all 0.2s;}
@@ -39,8 +39,8 @@
   </header>
 
   <div class="grid grid-cols-2 gap-3 mb-4">
-    <button id="tab-form" class="btn card text-center py-3 font-semibold text-blue-600 border-blue-200">📝 ลงข้อมูล</button>
-    <button id="tab-view" class="btn card text-center py-3 font-semibold text-slate-600">📊 ตรวจสอบวันหมดอายุ</button>
+    <button id="tab-form" class="btn card text-center py-3 font-semibold text-blue-600 border-blue-200 shadow-sm">📝 ลงข้อมูล</button>
+    <button id="tab-view" class="btn card text-center py-3 font-semibold text-slate-600 shadow-sm">📊 ตรวจสอบวันหมดอายุ</button>
   </div>
 
   <section id="view-form" class="card p-4">
@@ -85,50 +85,50 @@
       <div id="workingArea" class="md:col-span-2 space-y-4 border-t pt-4 mt-2">
           <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
             <label class="block text-sm mb-1 font-bold text-blue-800">5. เลือกรายการยา</label>
-            <select id="drugSelect" class="border rounded px-3 py-2 w-full bg-white"></select>
+            <select id="drugSelect" class="border rounded px-3 py-2 w-full bg-white shadow-sm"></select>
           </div>
 
           <div>
             <h3 class="font-semibold mb-2 flex items-center gap-2">📦 สต็อกปัจจุบัน <span class="text-xs font-normal text-slate-500">(เลือกจำนวนที่จะตัดออก)</span></h3>
-            <div class="overflow-x-auto rounded-lg border">
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
               <table class="min-w-full text-sm">
                 <thead class="bg-slate-100">
                   <tr>
-                    <th class="p-3 text-left">Lot EXP (ว/ด/ป)</th>
-                    <th class="p-3 text-center">มีอยู่</th>
-                    <th class="p-3 text-center">ตัดออก (Used)</th>
+                    <th class="p-3 text-left font-semibold text-slate-700">Lot EXP (ว/ด/ป)</th>
+                    <th class="p-3 text-center font-semibold text-slate-700">มีอยู่</th>
+                    <th class="p-3 text-center font-semibold text-slate-700">ตัดออก (Used)</th>
                   </tr>
                 </thead>
-                <tbody id="stockBody" class="divide-y"></tbody>
+                <tbody id="stockBody" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
           </div>
 
           <div>
-             <div class="flex items-center justify-between mb-2">
+             <div class="flex items-center justify-between mb-2 mt-2">
                 <h3 class="font-semibold text-green-700">➕ เพิ่มยาเข้าใหม่ (ใส่คืนกล่อง)</h3>
              </div>
-             <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+             <div class="bg-green-50 p-4 rounded-xl border border-green-100">
                 <label class="block text-sm mb-1 font-medium text-green-800">วันหมดอายุ (EXP)</label>
                 <div class="grid grid-cols-3 gap-2 mb-3">
-                    <select id="inputD" class="border rounded p-2 bg-white col-span-1 text-center"></select>
-                    <select id="inputM" class="border rounded p-2 bg-white col-span-1 text-center"></select>
-                    <select id="inputY" class="border rounded p-2 bg-white col-span-1 text-center font-medium text-slate-700"></select>
+                    <select id="inputD" class="border rounded p-2 bg-white col-span-1 text-center shadow-sm"></select>
+                    <select id="inputM" class="border rounded p-2 bg-white col-span-1 text-center shadow-sm"></select>
+                    <select id="inputY" class="border rounded p-2 bg-white col-span-1 text-center font-medium text-slate-700 shadow-sm"></select>
                 </div>
                 <div class="flex gap-3 items-end">
                     <div class="w-1/2">
                         <label class="block text-sm mb-1 font-medium text-green-800">จำนวนที่เติม</label>
-                        <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full" placeholder="ระบุจำนวน">
+                        <input type="number" id="addQty" min="0" step="1" class="border rounded px-3 py-2 w-full shadow-sm outline-none focus:ring-2 focus:ring-green-400" placeholder="ระบุจำนวน">
                     </div>
-                    <button id="addNewBtn" class="btn primary bg-green-600 border-green-600 w-1/2">+ เพิ่มรายการ</button>
+                    <button id="addNewBtn" class="btn primary bg-green-600 border-green-600 hover:bg-green-700 w-1/2 shadow-sm">+ เพิ่มรายการ</button>
                 </div>
                 <div id="newList" class="mt-3 space-y-2"></div>
-                <div id="newEmpty" class="text-center text-xs text-slate-400 mt-2 p-2 border border-dashed rounded bg-white/50">— ยังไม่มีรายการยาเข้าใหม่ —</div>
+                <div id="newEmpty" class="text-center text-xs text-slate-400 mt-2 p-3 border border-dashed rounded bg-white/50">— ยังไม่มีรายการยาเข้าใหม่ —</div>
              </div>
           </div>
           
           <!-- ปุ่มพักรายการ -->
-          <button id="addToCartBtn" class="btn w-full py-3 text-blue-700 border-blue-300 bg-white font-semibold hover:bg-blue-50 shadow-sm">
+          <button id="addToCartBtn" class="btn w-full py-3.5 text-blue-700 border-blue-300 bg-white font-bold hover:bg-blue-50 shadow-sm rounded-xl">
              📥 พักรายการนี้ (ไว้ส่งพร้อมกัน)
           </button>
       </div>
@@ -137,87 +137,95 @@
     <!-- ส่วนตะกร้า (Cart) -->
     <div id="cartSection" class="hidden mt-8 border-t-2 border-slate-200 pt-6">
         <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-           🛒 รายการที่รอส่ง <span id="cartCount" class="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">0</span>
+           🛒 รายการที่รอส่ง <span id="cartCount" class="bg-red-500 text-white text-xs rounded-full px-2.5 py-0.5">0</span>
         </h3>
-        <div class="bg-slate-50 border rounded-xl overflow-hidden mb-4">
+        <div class="bg-white border rounded-xl overflow-hidden mb-5 shadow-sm">
            <table class="w-full text-sm">
-               <thead class="bg-slate-200 text-slate-600">
+               <thead class="bg-slate-100 text-slate-600">
                    <tr>
-                       <th class="p-3 text-left">ชื่อยา</th>
-                       <th class="p-3 text-center">ตัดออก</th>
-                       <th class="p-3 text-center">เพิ่มใหม่</th>
+                       <th class="p-3 text-left font-semibold">ชื่อยา</th>
+                       <th class="p-3 text-center font-semibold">ตัดออก</th>
+                       <th class="p-3 text-center font-semibold">เพิ่มใหม่</th>
                        <th class="p-3 w-10"></th>
                    </tr>
                </thead>
-               <tbody id="cartBody" class="divide-y divide-slate-200"></tbody>
+               <tbody id="cartBody" class="divide-y divide-slate-100"></tbody>
            </table>
         </div>
         
-        <button id="saveAllBtn" class="btn primary w-full text-lg py-4 shadow-xl shadow-blue-200 font-bold animate-pulse">
+        <button id="saveAllBtn" class="btn primary w-full text-lg py-4 rounded-xl shadow-lg shadow-blue-200 font-bold hover:bg-blue-700 transition-colors">
            ✅ ยืนยันบันทึกทั้งหมด
         </button>
-        <div id="saveMsg" class="text-center mt-2 text-sm text-slate-500 min-h-[20px]"></div>
+        <div id="saveMsg" class="text-center mt-3 text-sm font-medium text-slate-500 min-h-[20px]"></div>
     </div>
 
   </section>
 
+  <!-- Section ตรวจสอบวันหมดอายุ (ปรับปรุงใหม่) -->
   <section id="view-output" class="card p-4 hidden">
-    <div class="flex items-center justify-between mb-3 border-b pb-3">
-      <h2 class="text-xl font-semibold">สรุปวันหมดอายุ</h2>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 border-b pb-4 gap-3">
+      <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+        📊 สรุปวันหมดอายุ
+      </h2>
       <div class="flex items-center gap-2">
         <!-- Dropdown ดูสรุป -->
-        <select id="boxViewSelect" class="border rounded px-2 py-1 text-sm bg-slate-50 font-semibold text-blue-800"></select>
-        <button id="refreshNearBtn" class="btn text-sm">↻</button>
+        <select id="boxViewSelect" class="border-2 border-blue-100 rounded-lg px-3 py-1.5 text-sm bg-blue-50 font-bold text-blue-800 shadow-sm outline-none focus:border-blue-300 transition-colors cursor-pointer"></select>
+        <button id="refreshNearBtn" class="btn text-sm hover:bg-slate-100 bg-white shadow-sm" title="รีเฟรชข้อมูล">↻</button>
       </div>
     </div>
-    <div class="mb-2 flex items-center gap-2 text-sm justify-end">
-        <span class="muted">ดูย้อนหลัง(วัน):</span>
-        <input id="nearDays" type="number" value="1000" class="border rounded px-2 py-1 w-20 text-center">
+    
+    <div id="daysFilterContainer" class="mb-4 flex items-center gap-2 text-sm justify-end bg-slate-50 p-2 rounded-lg w-fit ml-auto border border-slate-200">
+        <span class="font-medium text-slate-600">ค้นหาล่วงหน้า (วัน):</span>
+        <input id="nearDays" type="number" value="1000" class="border border-slate-300 rounded-md px-3 py-1 w-24 text-center font-bold text-blue-900 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all shadow-inner">
     </div>
+    
     <div id="nearList" class="space-y-3"></div>
   </section>
 </div>
 
 <!-- ... existing modals ... -->
 <div id="qrModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl p-6 w-full max-w-sm text-center shadow-2xl">
-      <h3 class="text-lg font-semibold mb-3">QR Code สำหรับกล่องนี้</h3>
-      <div id="qrBox" class="mb-4 flex justify-center p-2 bg-white"></div>
-      <div id="qrBoxName" class="font-bold text-blue-800 mb-2"></div>
-      <input id="qrLink" class="border rounded px-3 py-2 w-full text-xs mb-3 text-slate-500 bg-slate-100" readonly>
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl">
+      <h3 class="text-xl font-bold mb-3 text-slate-800">QR Code สำหรับกล่องนี้</h3>
+      <div id="qrBox" class="mb-4 flex justify-center p-3 bg-white border rounded-xl"></div>
+      <div id="qrBoxName" class="font-bold text-blue-800 text-lg mb-3"></div>
+      <input id="qrLink" class="border border-slate-300 rounded-lg px-3 py-2 w-full text-xs mb-4 text-slate-500 bg-slate-50 text-center font-mono" readonly>
       <div class="flex justify-center gap-2">
-        <button id="qrCopy" class="btn text-sm">คัดลอกลิงก์</button>
-        <button id="qrClose" class="btn text-sm">ปิด</button>
+        <button id="qrCopy" class="btn primary flex-1 font-semibold">คัดลอกลิงก์</button>
+        <button id="qrClose" class="btn flex-1 font-semibold hover:bg-slate-100">ปิด</button>
       </div>
     </div>
 </div>
 
 <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-bounce-in">
-        <div class="text-center mb-4">
-            <div class="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mb-3">✓</div>
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-100 transform transition-transform">
+        <div class="text-center mb-5">
+            <div class="mx-auto w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mb-3 shadow-inner">✓</div>
             <h3 class="text-2xl font-bold text-slate-800">บันทึกสำเร็จ!</h3>
-            <p class="text-slate-500 text-sm">ข้อมูลทั้งหมดถูกส่งเรียบร้อยแล้ว</p>
+            <p class="text-slate-500 text-sm mt-1">ข้อมูลทั้งหมดถูกส่งและปรับปรุงสต็อกแล้ว</p>
         </div>
         
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-left">
-            <div class="flex items-center gap-2 mb-2 text-amber-800 font-bold border-b border-amber-200 pb-1">
-                <span>⚠️ ยาที่ใกล้หมดอายุที่สุด (รวมทุกรายการ)</span>
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-5 text-left shadow-sm">
+            <div class="flex items-center gap-2 mb-2 text-amber-800 font-bold border-b border-amber-200 pb-2">
+                <span class="text-lg">⚠️</span> <span>ยาที่ใกล้หมดอายุที่สุด (ล่าสุด)</span>
             </div>
-            <div id="modalWarnContent" class="text-sm space-y-1 text-slate-700">
+            <div id="modalWarnContent" class="text-sm space-y-1 text-slate-700 pt-1">
             </div>
         </div>
 
-        <button onclick="closeSuccessModal()" class="w-full btn primary py-3 text-lg">รับทราบ / ปิด</button>
+        <button onclick="closeSuccessModal()" class="w-full btn primary py-3.5 text-lg font-bold rounded-xl hover:bg-blue-700 shadow-md">รับทราบ / ปิดหน้าต่าง</button>
     </div>
 </div>
 
-<div id="modalNeedAdd" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl p-5 w-full max-w-lg shadow-xl">
-    <h3 class="text-lg font-bold text-red-600 mb-2">❌ ข้อมูลสต็อกไม่เพียงพอ</h3>
-    <div id="modalNeedAddMsg" class="text-slate-700 mb-4 text-sm leading-relaxed"></div>
+<div id="modalNeedAdd" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+    <div class="flex items-center gap-3 mb-4 border-b pb-3">
+        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xl font-bold">!</div>
+        <h3 class="text-xl font-bold text-slate-800">ข้อมูลสต็อกไม่เพียงพอ</h3>
+    </div>
+    <div id="modalNeedAddMsg" class="text-slate-600 mb-5 text-sm leading-relaxed bg-red-50 p-4 rounded-xl border border-red-100"></div>
     <div class="flex justify-end gap-2">
-      <button onclick="document.getElementById('modalNeedAdd').classList.add('hidden')" class="btn">ปิด</button>
+      <button onclick="document.getElementById('modalNeedAdd').classList.add('hidden')" class="btn hover:bg-slate-100 font-semibold px-6">กลับไปแก้ไข</button>
     </div>
   </div>
 </div>
@@ -231,7 +239,7 @@ let currentBox = localStorage.getItem('em_box') || '';
 let currentLots = [];
 let useInputs   = {}; 
 let newLotsPend = [];
-let cart = []; // เก็บรายการยาที่รอส่ง
+let cart = []; 
 
 // ===== Helpers : Date & Format =====
 function initDateSelectors(){
@@ -299,7 +307,7 @@ function formatThaiDate(isoStr){
         const thaiPart = `${d} ${thMonth[m-1]} ${yearThaiShort}`;
         const engPart = `${d} ${enMonth[m-1]} ${yearEngShort}`;
 
-        return `${thaiPart} <span class="text-slate-400 text-xs">(${engPart})</span>`;
+        return `${thaiPart} <span class="text-slate-400 text-[10px] font-normal uppercase tracking-wider">(${engPart})</span>`;
     }catch(e){ return isoStr; }
 }
 
@@ -330,7 +338,7 @@ async function loadBoxes(){
   const selView = document.getElementById('boxViewSelect'); selView.innerHTML = '';
     
   // --- เพิ่มตัวเลือก "รวมทุกกล่อง" ในหน้าสรุป ---
-  selView.add(new Option('🌟 -- ดูรวมทุกกล่อง --', 'ALL'));
+  selView.add(new Option('🌟 -- ดูรวมทุกกล่อง (Dashboard) --', 'ALL'));
 
   boxes.forEach(b=>{
     selForm.add(new Option(b,b));
@@ -339,8 +347,6 @@ async function loadBoxes(){
 
   if(currentBox && boxes.includes(currentBox)){
       selForm.value = currentBox; 
-      // หน้าสรุปให้ default เป็นรวมทุกกล่อง หรือกล่องที่เลือกไว้ก็ได้
-      // ในที่นี้จะจำกล่องล่าสุดที่เลือกไว้ 
       selView.value = currentBox;
   } else {
       currentBox = boxes[0]; selForm.value=currentBox; localStorage.setItem('em_box',currentBox);
@@ -415,16 +421,17 @@ function renderStockTable(){
   const combinedLots = Array.from(displayMap.values()).sort((a,b) => a.expISO.localeCompare(b.expISO));
 
   if(!combinedLots.length){
-    tb.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">✅ ไม่มียาคงเหลือในระบบ หรือ ยังไม่ได้เลือกยา</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="3" class="p-5 text-center text-slate-400 bg-white">✅ ไม่มียาคงเหลือในระบบ หรือ ยังไม่ได้เลือกยา</td></tr>`;
     return;
   }
 
   combinedLots.forEach(l => {
     const tr=document.createElement('tr');
     tr.id = `row-${l.expISO}`;
+    tr.className = 'transition-colors bg-white hover:bg-slate-50';
     
     let dateHtml = formatThaiDate(l.expISO);
-    if(l.isNew) dateHtml += `<span class="badge-new">NEW</span>`;
+    if(l.isNew) dateHtml += `<span class="badge-new bg-emerald-100 text-emerald-700 border-emerald-300">NEW</span>`;
 
     const currentUsed = useInputs[l.expISO] || 0;
     const currentRemain = l.qty - currentUsed;
@@ -432,12 +439,12 @@ function renderStockTable(){
     let qtyHtml = `<span id="stock-val-${l.expISO}" class="font-bold text-lg transition-colors ${currentUsed>0?'text-blue-600':''}">${currentRemain}</span>`;
     
     if(l.addedQty > 0 && !l.isNew){
-        qtyHtml += `<div class="text-xs text-green-600">(+${l.addedQty})</div>`;
+        qtyHtml += `<div class="text-xs text-green-600 font-medium">(+${l.addedQty})</div>`;
     }
 
     if(currentUsed > 0) tr.classList.add('bg-blue-50');
 
-    tr.innerHTML = `<td class="p-3 text-sm text-slate-700">${dateHtml}</td>
+    tr.innerHTML = `<td class="p-3 text-sm text-slate-700 font-medium">${dateHtml}</td>
                     <td class="p-3 text-center">${qtyHtml}</td>`;
       
     const tdStep = document.createElement('td'); tdStep.className='p-2';
@@ -476,9 +483,9 @@ function renderNewList(){
     
   newLotsPend.forEach((n,idx)=>{ 
       const row=document.createElement('div'); 
-      row.className='flex items-center justify-between p-2 border rounded bg-white shadow-sm'; 
-      row.innerHTML=`<div class="text-sm"><span class="font-bold text-green-700">เข้าใหม่:</span> ${formatThaiDate(n.exp)} <span class="mx-2 text-slate-300">|</span> จำนวน: <b>${n.qty}</b></div>`; 
-      const del=document.createElement('button'); del.className='text-red-500 hover:text-red-700 text-sm px-2'; del.textContent='ลบ'; 
+      row.className='flex items-center justify-between p-3 border rounded-xl bg-white shadow-sm'; 
+      row.innerHTML=`<div class="text-sm"><span class="font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded mr-1">เข้าใหม่</span> ${formatThaiDate(n.exp)} <span class="mx-2 text-slate-300">|</span> จำนวน: <b class="text-lg text-green-800 ml-1">${n.qty}</b></div>`; 
+      const del=document.createElement('button'); del.className='text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg text-sm font-bold transition-colors'; del.textContent='ลบ'; 
       del.onclick=()=>{ newLotsPend.splice(idx,1); renderNewList(); renderStockTable(); }; 
       row.appendChild(del); wrap.appendChild(row); 
   });
@@ -505,10 +512,10 @@ function addToCart(){
     let errorHtml = '';
     usedLots.forEach(u=>{
         const have = (stockMap[u.exp]||0) + (addMap[u.exp]||0);
-        if(u.qtyUsed > have) errorHtml += `<li>Exp ${formatThaiDate(u.exp)}: ต้องการ ${u.qtyUsed} แต่มี ${have}</li>`;
+        if(u.qtyUsed > have) errorHtml += `<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Exp ${formatThaiDate(u.exp)}: ต้องการ ${u.qtyUsed} แต่มี ${have}</li>`;
     });
     if(errorHtml){
-        document.getElementById('modalNeedAddMsg').innerHTML = `<ul class="list-disc pl-5 space-y-1">${errorHtml}</ul>`;
+        document.getElementById('modalNeedAddMsg').innerHTML = `<ul class="space-y-2">${errorHtml}</ul>`;
         document.getElementById('modalNeedAdd').classList.remove('hidden');
         return;
     }
@@ -555,16 +562,17 @@ function renderCart(){
     tbody.innerHTML = '';
     cart.forEach((item, idx) => {
         const tr = document.createElement('tr');
+        tr.className = "bg-white hover:bg-slate-50 transition-colors";
         
         let usedText = item.usedLots.length > 0 ? item.usedLots.reduce((acc,cur)=>acc+cur.qtyUsed, 0) : '-';
         let addText = item.newLots.length > 0 ? item.newLots.reduce((acc,cur)=>acc+cur.qty, 0) : '-';
 
         tr.innerHTML = `
-            <td class="p-3 font-medium text-blue-900">${item.drug}</td>
-            <td class="p-3 text-center text-red-600 font-bold">${usedText}</td>
-            <td class="p-3 text-center text-green-600 font-bold">${addText}</td>
+            <td class="p-3 font-bold text-blue-900">${item.drug}</td>
+            <td class="p-3 text-center text-red-600 font-bold text-lg">${usedText}</td>
+            <td class="p-3 text-center text-green-600 font-bold text-lg">${addText}</td>
             <td class="p-3 text-right">
-                <button class="text-slate-400 hover:text-red-500 text-lg" onclick="removeCart(${idx})">×</button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 text-xl font-bold transition-colors" onclick="removeCart(${idx})">×</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -637,13 +645,16 @@ function showSuccessModal(item){
     const content = document.getElementById('modalWarnContent');
     if(item){
         content.innerHTML = `
-            <div class="text-xs text-slate-500 mb-1">ยาที่ใกล้หมดอายุที่สุด (อัปเดตล่าสุด):</div>
-            <div class="font-bold text-lg text-slate-800">${item.drug}</div>
-            <div>วันหมดอายุ: <span class="text-red-600 font-bold">${formatThaiDate(item.expISO)}</span></div>
-            <div class="text-slate-500 text-xs">เหลือเวลาอีก ${item.days} วัน</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">กล่อง ${item.box || currentBox}</div>
+            <div class="font-bold text-xl text-slate-800 leading-tight mb-2">${item.drug}</div>
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 text-sm">หมดอายุ:</span>
+                <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-100">${formatThaiDate(item.expISO)}</span>
+            </div>
+            <div class="text-slate-500 text-sm mt-1">เหลือเวลาอีก <span class="font-bold text-slate-700">${item.days}</span> วัน</div>
         `;
     } else {
-        content.innerHTML = `<div class="text-green-600">✅ ข้อมูลอัปเดตเรียบร้อย</div>`;
+        content.innerHTML = `<div class="text-emerald-600 font-bold text-center py-2">✅ ข้อมูลอัปเดตเรียบร้อย</div>`;
     }
     document.getElementById('successModal').classList.remove('hidden');
 }
@@ -659,57 +670,148 @@ function getReason(){
     return r.value;
 }
 
-// ===== View Output (ปรับปรุงให้รองรับรวมทุกกล่อง) =====
+// ===== View Output (ปรับปรุงใหม่สำหรับ Dashboard สรุปทุกกล่อง) =====
 async function loadNear(){
   const viewMode = document.getElementById('boxViewSelect').value;
-  // ถ้าไม่ใช่ ALL แต่ไม่มีกล่องเลยให้ออก
   if(viewMode !== 'ALL' && !currentBox) return; 
 
-  const days = Number(document.getElementById('nearDays').value)||1000;
+  const daysInput = document.getElementById('nearDays');
+  const daysContainer = document.getElementById('daysFilterContainer');
   const list = document.getElementById('nearList'); 
-  list.innerHTML = '<div class="text-center p-4 text-slate-400">Loading...</div>';
+  
+  // สถานะกำลังโหลดแบบใหม่ ดูสวยงามขึ้น
+  list.innerHTML = `
+    <div class="flex flex-col items-center justify-center p-10 text-slate-400">
+      <svg class="animate-spin h-10 w-10 mb-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="font-medium text-slate-500 tracking-wide">กำลังโหลดข้อมูล...</span>
+    </div>`;
     
-  let data;
-  // เช็คว่าผู้ใช้เลือกดูทุกกล่อง หรือ กล่องเดียว
   if (viewMode === 'ALL') {
-      data = await apiGet({action: 'near_all', days});
+      // โหมดรวมทุกกล่อง (จำลองหน้า Summary_Soonest)
+      if(daysContainer) daysContainer.classList.add('hidden');
+      
+      // ดึงข้อมูลล่วงหน้าเยอะๆ เพื่อให้เจอยาที่ใกล้หมดอายุที่สุดของแต่ละกล่องเสมอ
+      const data = await apiGet({action: 'near_all', days: 3650}); 
+
+      list.innerHTML='';
+        
+      if(!data.rows || !data.rows.length){
+          list.innerHTML='<div class="text-center p-6 border-2 border-dashed rounded-2xl bg-slate-50 text-slate-500 font-medium">✅ ไม่พบข้อมูลยาในระบบ</div>';
+          return;
+      }
+      
+      // 1. จัดกลุ่มข้อมูล หาตัวที่ใกล้หมดอายุที่สุด (ดึง 1 รายการต่อกล่อง)
+      const soonestByBox = {};
+      const sortedRows = data.rows.sort((a,b) => a.expISO.localeCompare(b.expISO));
+      
+      sortedRows.forEach(r => {
+          if(r.box && !soonestByBox[r.box]) {
+              soonestByBox[r.box] = r; // เก็บรายการแรกที่เจอ (เพราะเรียงวันหมดอายุมาแล้ว)
+          }
+      });
+      
+      // 2. แปลงเป็นอาร์เรย์และเรียงลำดับกล่องที่วิกฤตที่สุดขึ้นก่อน
+      const summaryList = Object.values(soonestByBox).sort((a,b) => a.days - b.days);
+      
+      // 3. สร้าง UI แบบ Grid Card Dashboard
+      const grid = document.createElement('div');
+      grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mt-2';
+      
+      summaryList.forEach((r) => {
+          const isUrgent = r.days < 90; 
+          const isWarning = r.days >= 90 && r.days < 180;
+          
+          let statusColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+          let statusBadge = 'bg-emerald-500';
+          let icon = '✅';
+          
+          if(isUrgent) { 
+              statusColor = 'bg-rose-50 text-rose-700 border-rose-200'; 
+              statusBadge = 'bg-rose-500';
+              icon = '🚨'; 
+          } else if(isWarning) { 
+              statusColor = 'bg-amber-50 text-amber-700 border-amber-200'; 
+              statusBadge = 'bg-amber-500';
+              icon = '⚠️'; 
+          }
+
+          const card = document.createElement('div');
+          card.className = `relative overflow-hidden p-4 border rounded-2xl bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between group`;
+          
+          card.innerHTML = `
+          <!-- แถบสีสถานะด้านซ้าย -->
+          <div class="absolute left-0 top-0 w-1.5 h-full ${statusBadge} transition-all group-hover:w-2"></div>
+          
+          <div class="flex justify-between items-start mb-3 pl-3">
+             <div class="flex items-center gap-2">
+                <span class="text-xl drop-shadow-sm">📦</span>
+                <span class="font-bold text-lg text-slate-800 tracking-tight">${r.box}</span>
+             </div>
+             <div class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shadow-sm ${statusColor}">
+                <span>${icon}</span>
+                <span>อีก ${r.days} วัน</span>
+             </div>
+          </div>
+          
+          <div class="pl-3">
+             <div class="text-[16px] font-bold text-blue-900 mb-1 leading-snug line-clamp-2" title="${r.drug}">${r.drug}</div>
+             
+             <div class="flex items-end justify-between mt-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div>
+                   <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">วันหมดอายุ (EXP)</div>
+                   <div class="text-[15px] font-semibold text-slate-700">${formatThaiDate(r.expISO)}</div>
+                </div>
+                <div class="text-right">
+                   <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">คงเหลือ</div>
+                   <div class="text-xl font-black text-blue-700 leading-none drop-shadow-sm">${r.qty}</div>
+                </div>
+             </div>
+          </div>
+          `;
+          grid.appendChild(card);
+      });
+      list.appendChild(grid);
+
   } else {
-      data = await apiGet({action: 'near', box: viewMode, days});
-  }
+      // โหมดดูกล่องเดียว (เหมือนเดิม แต่ปรับ UI ให้เข้ากัน)
+      if(daysContainer) daysContainer.classList.remove('hidden');
+      const days = Number(daysInput.value)||1000;
+      const data = await apiGet({action: 'near', box: viewMode, days});
 
-  list.innerHTML='';
-    
-  if(!data.rows || !data.rows.length){
-      list.innerHTML='<div class="text-center p-5 border rounded bg-slate-50">✅ เยี่ยมมาก! ไม่มียาใกล้หมดอายุในช่วงนี้</div>';
-      return;
+      list.innerHTML='';
+        
+      if(!data.rows || !data.rows.length){
+          list.innerHTML='<div class="text-center p-8 border-2 border-dashed rounded-2xl bg-slate-50 text-slate-500 font-medium">✅ เยี่ยมมาก! ไม่มียาใกล้หมดอายุในช่วงนี้</div>';
+          return;
+      }
+        
+      data.rows.forEach((r,idx)=>{
+          const isUrgent = r.days < 90; 
+          const el=document.createElement('div');
+          el.className=`p-4 border rounded-2xl flex items-center justify-between bg-white shadow-sm hover:shadow-md transition-shadow ${idx===0 ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`;
+          el.innerHTML=`
+          <div>
+            <div class="flex items-center flex-wrap gap-2 mb-2">
+               ${idx===0 ? '<span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-amber-200 uppercase tracking-wider shadow-sm">ใกล้สุด!</span>' : ''}
+               <span class="font-bold text-slate-800 text-[16px]">${r.drug}</span>
+            </div>
+            <div class="text-sm flex items-center gap-2.5 ${isUrgent?'text-red-600 font-semibold':'text-slate-500'}">
+               <span class="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">EXP</span> 
+               <span class="font-medium">${formatThaiDate(r.expISO)}</span>
+               <span class="font-bold bg-slate-50 border px-2 py-0.5 rounded-lg text-xs ml-1 shadow-sm">อีก ${r.days} วัน</span>
+            </div>
+          </div>
+          <div class="text-right bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100 min-w-[4.5rem]">
+             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">คงเหลือ</div>
+             <div class="font-black text-xl text-blue-900 leading-none">${r.qty}</div>
+          </div>
+          `;
+          list.appendChild(el);
+      });
   }
-    
-  data.rows.forEach((r,idx)=>{
-      const isUrgent = r.days < 90; 
-      // เพิ่มป้ายชื่อกล่อง หากเลือกโหมด ALL
-      const boxTag = viewMode === 'ALL' ? `<span class="bg-indigo-50 text-indigo-700 text-[11px] px-2 py-0.5 rounded-full border border-indigo-200 ml-2 whitespace-nowrap">📦 ${r.box}</span>` : '';
-
-      const el=document.createElement('div');
-      // ไฮไลต์กล่องแรกเสมอ
-      el.className=`p-3 border rounded-lg flex items-center justify-between bg-white shadow-sm ${idx===0 ? 'ring-2 ring-amber-300' : ''}`;
-      el.innerHTML=`
-      <div>
-        <div class="flex items-center flex-wrap gap-1 mb-1">
-           ${idx===0 ? '<span class="badge-nearest">ใกล้สุด!</span>' : ''}
-           <span class="font-bold text-slate-700">${r.drug}</span>
-           ${boxTag}
-        </div>
-        <div class="text-sm ${isUrgent?'text-red-600 font-medium':'text-slate-500'}">
-           EXP: ${formatThaiDate(r.expISO)} <span class="font-bold ml-1">(${r.days} วัน)</span>
-        </div>
-      </div>
-      <div class="text-right bg-slate-100 px-3 py-1 rounded">
-         <div class="text-xs text-slate-500">คงเหลือ</div>
-         <div class="font-bold text-lg text-blue-900">${r.qty}</div>
-      </div>
-      `;
-      list.appendChild(el);
-  });
 }
 
 // ===== Init =====
