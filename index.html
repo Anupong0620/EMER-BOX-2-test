@@ -144,22 +144,38 @@
 
           <h3 class="font-bold text-green-700 mb-3 flex items-center gap-2 mt-6">➕ เพิ่มยาเข้าใหม่ (ใส่คืน)</h3>
           <div class="bg-green-50 rounded-2xl border border-green-200 p-4 mb-4">
-              <div class="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                      <label class="block text-xs font-bold text-green-700 mb-1">วันหมดอายุ (EXP)</label>
-                      <input type="date" id="newLotExp" class="w-full bg-white border border-green-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-400">
-                  </div>
-                  <div>
-                      <label class="block text-xs font-bold text-green-700 mb-1">จำนวนที่เติม</label>
-                      <div class="flex items-center gap-2">
-                        <input type="number" id="addQty" min="1" step="1" placeholder="0" class="w-full bg-white border border-green-300 rounded-xl px-3 py-2 text-center font-bold text-lg outline-none focus:ring-2 focus:ring-green-400">
-                        <button id="addNewBtn" class="bg-green-600 active:bg-green-700 text-white p-2 rounded-xl shadow-sm h-full aspect-square flex items-center justify-center">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        </button>
+              
+              <!-- ส่วนกรอกวันที่ (ใช้ปฏิทิน) -->
+              <div class="mb-4">
+                  <div class="flex justify-between items-center mb-2">
+                      <label class="block text-xs font-bold text-green-700">วันหมดอายุ (EXP)</label>
+                      <div class="flex bg-green-200/50 p-0.5 rounded-lg border border-green-200/60 shadow-inner">
+                          <label class="cursor-pointer">
+                              <input type="radio" name="yearType" value="CE" class="peer sr-only" checked>
+                              <span class="px-2.5 py-1 text-[10px] font-bold rounded-md text-green-700 peer-checked:bg-green-600 peer-checked:text-white transition-colors block">ค.ศ.</span>
+                          </label>
+                          <label class="cursor-pointer">
+                              <input type="radio" name="yearType" value="BE" class="peer sr-only">
+                              <span class="px-2.5 py-1 text-[10px] font-bold rounded-md text-green-700 peer-checked:bg-green-600 peer-checked:text-white transition-colors block">พ.ศ.</span>
+                          </label>
                       </div>
                   </div>
+                  <input type="date" id="newLotExp" class="w-full bg-white border border-green-300 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:border-green-400 focus:ring-green-200 transition-all">
               </div>
-              <div id="newList" class="space-y-2 mt-3 empty:hidden"></div>
+              
+              <!-- ส่วนกรอกจำนวนแบบใหม่ปรับ Layout -->
+              <div>
+                  <label class="block text-xs font-bold text-green-700 mb-2">จำนวนที่เติม</label>
+                  <div class="flex items-center gap-3">
+                      <input type="number" id="addQty" min="1" step="1" placeholder="0" class="w-full bg-white border border-green-300 rounded-xl px-4 py-2.5 text-center font-bold text-xl outline-none focus:ring-2 focus:border-green-400 focus:ring-green-200 transition-all">
+                      <button id="addNewBtn" class="bg-green-600 active:bg-green-700 text-white px-5 py-2.5 rounded-xl shadow-sm font-bold flex items-center justify-center gap-1 transition-colors whitespace-nowrap">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                          เพิ่ม
+                      </button>
+                  </div>
+              </div>
+
+              <div id="newList" class="space-y-2 mt-4 empty:hidden"></div>
           </div>
 
           <button id="addToCartBtn" class="w-full bg-white border-2 border-blue-600 text-blue-700 font-bold text-lg py-3.5 rounded-2xl active:bg-blue-50 transition-colors shadow-sm flex items-center justify-center gap-2 mt-8">
@@ -183,7 +199,7 @@
         </h2>
         <div class="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border border-slate-200 shadow-sm">
             <label class="text-xs font-medium text-slate-500">ล่วงหน้า</label>
-            <input id="nearDays" type="number" value="180" class="w-14 text-center text-sm font-bold text-blue-700 outline-none">
+            <input id="nearDays" type="number" value="1000" class="w-16 text-center text-sm font-bold text-blue-700 outline-none">
             <span class="text-xs text-slate-500">วัน</span>
         </div>
       </div>
@@ -255,6 +271,47 @@
         </div>
 
         <button onclick="closeSuccessModal()" class="w-full bg-slate-800 active:bg-slate-900 text-white py-4 text-lg font-bold rounded-2xl shadow-lg">กลับสู่หน้าหลัก</button>
+    </div>
+</div>
+
+<!-- Modal: Edit Expiry Date -->
+<div id="editExpModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl slide-up">
+        <h3 class="text-lg font-bold mb-2 text-slate-800 flex items-center gap-2">✏️ แก้ไขวันหมดอายุ</h3>
+        <p class="text-xs text-slate-500 mb-4">ระบบจะย้ายสต็อกทั้งหมดของล็อตนี้ ไปยังวันหมดอายุใหม่ที่ระบุด้านล่าง</p>
+        
+        <div class="mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center">
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase mb-0.5">วันหมดอายุเดิม</div>
+                <div class="font-bold text-slate-700" id="editExpOldDateDisplay">-</div>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] font-bold text-slate-400 uppercase mb-0.5">จำนวน</div>
+                <div class="font-black text-slate-700" id="editExpQtyDisplay">-</div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-bold text-slate-700">ระบุวันหมดอายุใหม่</label>
+                <div class="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-200 shadow-inner">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="editYearType" value="CE" class="peer sr-only" checked>
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors block">ค.ศ.</span>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="editYearType" value="BE" class="peer sr-only">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors block">พ.ศ.</span>
+                    </label>
+                </div>
+            </div>
+            <input type="date" id="editLotExp" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:border-blue-400 focus:ring-blue-200 transition-all">
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="closeEditExpModal()" class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl active:bg-slate-200 transition-colors">ยกเลิก</button>
+            <button id="confirmEditBtn" onclick="confirmEditExp()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl active:bg-blue-700 transition-colors flex justify-center items-center">ยืนยันการแก้ไข</button>
+        </div>
     </div>
 </div>
 
@@ -380,9 +437,8 @@ async function initializeApp() {
     if(boxParam) {
         currentBox = boxParam;
         isBoxLockedByQR = true;
-        // ซ่อนตัวเลือกกล่อง เพราะระบุมาจาก QR แล้ว
         document.getElementById('boxSelectContainer').classList.add('hidden');
-        window.history.replaceState({}, document.title, window.location.pathname); // ล้าง URL ให้คลีน
+        window.history.replaceState({}, document.title, window.location.pathname);
     } else if(currentBox && boxes.includes(currentBox)) {
         selForm.value = currentBox;
         selView.value = currentBox;
@@ -403,7 +459,6 @@ function updateHeaderBoxName() {
 async function loadItems() {
     if(!currentBox) return;
     
-    // Reset state
     useInputs={}; newLotsPend=[]; 
     document.getElementById('workingArea').classList.add('hidden');
     document.getElementById('workingArea').classList.remove('opacity-100');
@@ -435,7 +490,6 @@ async function loadLots() {
     
     emptyState.classList.add('hidden');
     workArea.classList.remove('hidden');
-    // small delay for transition
     setTimeout(() => workArea.classList.add('opacity-100'), 50);
 
     const data = await apiGet({action:'lots', box: currentBox, drug});
@@ -495,28 +549,42 @@ function renderStockCards() {
     });
 }
 
-// Global helper for stepper
 window.updateQty = function(expISO, delta, max) {
     let current = useInputs[expISO] || 0;
     current += delta;
     if(current < 0) current = 0;
     if(current > max) current = max;
     useInputs[expISO] = current;
-    renderStockCards(); // Re-render to update UI colors and remaining qty
+    renderStockCards(); 
 }
 
 function addNewLot() {
-    const expISO = document.getElementById('newLotExp').value;
+    const rawDate = document.getElementById('newLotExp').value;
+    const yType = document.querySelector('input[name="yearType"]:checked').value;
     const qty = parseInt(document.getElementById('addQty').value)||0;
     
-    if(!expISO) return showToast('โปรดเลือกวันหมดอายุ');
+    if(!rawDate) return showToast('โปรดเลือกวันหมดอายุจากปฏิทิน');
     if(qty<=0) return showToast('โปรดระบุจำนวนที่ถูกต้อง');
+    
+    let [yyyy, mm, dd] = rawDate.split('-');
+    let parsedYear = parseInt(yyyy, 10);
+    
+    if(yType === 'BE') {
+        parsedYear -= 543;
+    }
+    
+    // ป้องกันกรณีปฏิทินในเครื่องแปลงเป็น ค.ศ. อัตโนมัติแล้ว แต่ผู้ใช้กดเลือก พ.ศ. ซ้ำ
+    if (parsedYear < 1900) {
+        return showToast('ปีผิดปกติ โปรดตรวจสอบว่าปฏิทินเครื่องเป็น พ.ศ. หรือ ค.ศ. แล้วเลือกให้ตรงกัน');
+    }
+    
+    const expISO = `${parsedYear}-${mm}-${dd}`;
     
     newLotsPend.push({exp: expISO, qty}); 
     renderNewList();
     renderStockCards();
     
-    // Clear inputs
+    // เคลียร์ช่อง input หลังกดเพิ่ม
     document.getElementById('newLotExp').value = '';
     document.getElementById('addQty').value = '';
 }
@@ -548,6 +616,101 @@ window.removeNewLot = function(idx) {
     newLotsPend.splice(idx,1);
     renderNewList();
     renderStockCards();
+}
+
+// ===== Edit Expiry Logic =====
+window._editMode = 'FORM'; // รองรับ 2 โหมด: 'FORM' (ลงตะกร้า) และ 'DIRECT' (บันทึกทันที)
+window._currentEditExp = null;
+window._currentEditQty = 0;
+window._directEditCtx = {}; // เก็บข้อมูลสำหรับโหมด DIRECT
+
+window.openEditExp = function(expISO, qty) {
+    window._editMode = 'FORM';
+    window._currentEditExp = expISO;
+    window._currentEditQty = qty;
+    document.getElementById('editExpOldDateDisplay').textContent = formatThaiDate(expISO);
+    document.getElementById('editExpQtyDisplay').textContent = qty;
+    document.getElementById('editLotExp').value = ''; 
+    
+    // ตั้งค่าเหตุผลเป็น "แก้ไขวันหมดอายุ" อัตโนมัติ
+    document.querySelector('input[name="reason"][value="แก้ไขวันหมดอายุ"]').checked = true;
+    document.getElementById('reasonOther').classList.add('hidden');
+
+    document.getElementById('editExpModal').classList.remove('hidden');
+}
+
+window.closeEditExpModal = function() {
+    document.getElementById('editExpModal').classList.add('hidden');
+}
+
+window.confirmEditExp = async function() {
+    const rawDate = document.getElementById('editLotExp').value;
+    const yType = document.querySelector('input[name="editYearType"]:checked').value;
+    const confirmBtn = document.getElementById('confirmEditBtn');
+
+    if(!rawDate) return showToast('โปรดเลือกวันหมดอายุใหม่');
+
+    let [yyyy, mm, dd] = rawDate.split('-');
+    let parsedYear = parseInt(yyyy, 10);
+    if(yType === 'BE') parsedYear -= 543;
+
+    if (parsedYear < 1900) {
+        return showToast('ปีผิดปกติ โปรดตรวจสอบว่าปฏิทินเครื่องเป็น พ.ศ. หรือ ค.ศ.');
+    }
+
+    const newExpISO = `${parsedYear}-${mm}-${dd}`;
+
+    // เช็คกรณีโหมดฟอร์ม (Form)
+    if (window._editMode === 'FORM') {
+        if(newExpISO === window._currentEditExp) {
+            return showToast('วันหมดอายุตรงกับของเดิม', 'error');
+        }
+        useInputs[window._currentEditExp] = window._currentEditQty;
+        newLotsPend.push({exp: newExpISO, qty: window._currentEditQty});
+
+        closeEditExpModal();
+        renderNewList();
+        renderStockCards();
+        showToast('เตรียมแก้ไขวันหมดอายุแล้ว โปรดกด "พักลงตะกร้า"', 'success');
+    } 
+    // เช็คกรณีโหมดแก้ไขตรง (Direct จาก Dashboard)
+    else if (window._editMode === 'DIRECT') {
+        const ctx = window._directEditCtx;
+        if(newExpISO === ctx.oldExp) {
+            return showToast('วันหมดอายุตรงกับของเดิม', 'error');
+        }
+
+        // ล็อกปุ่มกันกดซ้ำ
+        confirmBtn.disabled = true;
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กำลังบันทึก...`;
+
+        try {
+            const res = await apiPost({
+                box: ctx.box,
+                dateVisit: new Date().toISOString().slice(0,10),
+                inspector: 'QR-User',
+                reason: 'แก้ไขวันหมดอายุ (แก้ไขด่วน)',
+                drug: ctx.drug,
+                usedLots: [{ exp: ctx.oldExp, qtyUsed: ctx.qty }],
+                newLots: [{ exp: newExpISO, qty: ctx.qty }]
+            });
+            
+            if(res.ok) {
+                closeEditExpModal();
+                showToast('อัปเดตวันหมดอายุสำเร็จ!', 'success');
+                await loadNear(); // รีเฟรชหน้า Dashboard อัตโนมัติ
+            } else {
+                showToast(`แก้ไขล้มเหลว: ${res.error}`, 'error');
+            }
+        } catch(e) {
+            showToast('เชื่อมต่อระบบล้มเหลว โปรดลองอีกครั้ง', 'error');
+        }
+
+        // คืนค่าปุ่ม
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+    }
 }
 
 function getReason() {
@@ -590,7 +753,7 @@ function addToCart() {
     
     // Reset Form
     document.getElementById('drugSelect').value = '';
-    loadLots(); // This will hide the working area
+    loadLots(); // Hides working area
     updateCartUI();
     showToast('นำยาพักไว้ในตะกร้าแล้ว', 'success');
 }
@@ -672,7 +835,7 @@ async function saveAll() {
             const res = await apiPost({
                 box: currentBox,
                 dateVisit,
-                inspector: 'QR-User', // ส่งค่า Default เนื่องจากเอาช่องผู้ตรวจสอบออก
+                inspector: 'QR-User', 
                 reason,
                 drug: item.drug,
                 usedLots: item.usedLots,
@@ -703,7 +866,7 @@ async function saveAll() {
 
 function showSuccessModal(item) {
     const content = document.getElementById('modalWarnContent');
-    if(item && item.drug) { // Check if valid item
+    if(item && item.drug) {
         content.innerHTML = `
             <div class="font-bold text-lg text-slate-800 leading-tight mb-1">${item.drug}</div>
             <div class="flex items-center gap-2 mb-1">
@@ -720,6 +883,23 @@ function showSuccessModal(item) {
 
 window.closeSuccessModal = function() {
     document.getElementById('successModal').classList.add('hidden');
+}
+
+// ฟังก์ชันสำหรับเปิดโหมดแก้ไขด่วน (Direct Edit) จากหน้า Dashboard
+window.openDirectEditExp = function(box, drug, expISO, qty) {
+    if (isBoxLockedByQR && currentBox !== box) {
+        showToast('สแกนผ่าน QR Code ถูกล็อกไว้ ไม่สามารถแก้กล่องอื่นได้', 'error');
+        return;
+    }
+
+    window._editMode = 'DIRECT';
+    window._directEditCtx = { box, drug, oldExp: expISO, qty };
+
+    document.getElementById('editExpOldDateDisplay').textContent = formatThaiDate(expISO);
+    document.getElementById('editExpQtyDisplay').textContent = qty;
+    document.getElementById('editLotExp').value = ''; 
+
+    document.getElementById('editExpModal').classList.remove('hidden');
 }
 
 // View Output Logic (Dashboard)
@@ -747,7 +927,6 @@ async function loadNear() {
         return;
     }
     
-    // Render logic (simplified for mobile view)
     let displayData = data.rows;
     if(viewMode === 'ALL') {
         const soonest = {};
@@ -777,7 +956,13 @@ async function loadNear() {
                 </div>
             </div>
             <div class="flex items-center justify-between text-sm mt-2 pt-2 border-t border-slate-100">
-                <div class="text-slate-500 font-medium text-xs">Exp: <span class="text-slate-800">${formatThaiDate(r.expISO)}</span></div>
+                <div class="text-slate-500 font-medium text-xs flex items-center gap-2">
+                    Exp: <span class="text-slate-800">${formatThaiDate(r.expISO)}</span>
+                    <button onclick="openDirectEditExp('${r.box || viewMode}', '${r.drug}', '${r.expISO}', ${r.qty})" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded flex items-center gap-1 transition-colors border border-blue-100 shadow-sm active:bg-blue-200">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <span class="text-[10px] font-bold">แก้</span>
+                    </button>
+                </div>
                 <div class="${accentColor} px-2 py-1 rounded-lg text-xs font-bold">
                     อีก ${r.days} วัน
                 </div>
@@ -808,6 +993,80 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nearDays').onchange = () => { loadNear(); };
     document.getElementById('drugSelect').onchange = loadLots;
     
+    // --- เริ่มโค้ดส่วนที่เพิ่มใหม่ จัดการปฏิทิน พ.ศ. ให้อัตโนมัติ ---
+    const yearRadios = document.querySelectorAll('input[name="yearType"]');
+    const expInput = document.getElementById('newLotExp');
+
+    function adjustDateInput(targetType, forceFill = false) {
+        if (expInput.value) {
+            // กรณีมีวันที่อยู่แล้ว ให้แปลงปีไปๆ มาๆ
+            let [yStr, mStr, dStr] = expInput.value.split('-');
+            let y = parseInt(yStr, 10);
+            if (targetType === 'BE' && y < 2400) {
+                y += 543;
+            } else if (targetType === 'CE' && y >= 2400) {
+                y -= 543;
+            }
+            expInput.value = `${y}-${mStr}-${dStr}`;
+        } else if (forceFill) {
+            // กรณีช่องว่างเปล่า เติมวันที่ของวันนี้ให้ เพื่อให้ปฏิทินเด้งไปถูกปี
+            let d = new Date();
+            let yyyy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            if (targetType === 'BE') yyyy += 543;
+            expInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+    }
+
+    yearRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            adjustDateInput(e.target.value, true);
+        });
+    });
+
+    expInput.addEventListener('click', () => {
+        if (!expInput.value) {
+            const currentType = document.querySelector('input[name="yearType"]:checked').value;
+            adjustDateInput(currentType, true);
+        }
+    });
+
+    // --- จัดการปฏิทิน พ.ศ. ของโหมดแก้ไขวันหมดอายุ ---
+    const editYearRadios = document.querySelectorAll('input[name="editYearType"]');
+    const editExpInput = document.getElementById('editLotExp');
+
+    function adjustEditDateInput(targetType, forceFill = false) {
+        if (editExpInput.value) {
+            let [yStr, mStr, dStr] = editExpInput.value.split('-');
+            let y = parseInt(yStr, 10);
+            if (targetType === 'BE' && y < 2400) y += 543;
+            else if (targetType === 'CE' && y >= 2400) y -= 543;
+            editExpInput.value = `${y}-${mStr}-${dStr}`;
+        } else if (forceFill) {
+            let d = new Date();
+            let yyyy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            if (targetType === 'BE') yyyy += 543;
+            editExpInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+    }
+
+    editYearRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            adjustEditDateInput(e.target.value, true);
+        });
+    });
+
+    editExpInput.addEventListener('click', () => {
+        if (!editExpInput.value) {
+            const currentType = document.querySelector('input[name="editYearType"]:checked').value;
+            adjustEditDateInput(currentType, true);
+        }
+    });
+    // --- จบโค้ดส่วนที่เพิ่มใหม่ ---
+
     // Buttons
     document.getElementById('addNewBtn').onclick = addNewLot;
     document.getElementById('addToCartBtn').onclick = addToCart;
