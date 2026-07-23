@@ -247,11 +247,17 @@
       <p class="text-sm text-slate-500 mb-4">สแกนเพื่อเข้าถึงกล่องนี้โดยตรง</p>
       
       <div id="qrBox" class="mb-4 flex justify-center p-4 bg-white border-2 border-slate-100 rounded-2xl"></div>
-      <div id="qrBoxName" class="font-black text-blue-700 text-xl mb-4"></div>
+      <div id="qrBoxName" class="font-black text-blue-700 text-xl mb-2"></div>
       
-      <div class="flex gap-3 mt-6">
-        <button id="qrClose" class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl active:bg-slate-200">ปิด</button>
-        <button id="qrCopy" class="flex-1 py-3 bg-blue-100 text-blue-700 font-bold rounded-xl active:bg-blue-200">คัดลอกลิงก์</button>
+      <!-- ปุ่มดาวน์โหลดป้ายแบบสวยงาม -->
+      <button id="qrDownload" class="w-full py-3.5 mt-2 bg-emerald-600 text-white font-bold text-lg rounded-xl active:bg-emerald-700 shadow-md flex justify-center items-center gap-2 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        ดาวน์โหลดป้ายสวยงาม (PNG)
+      </button>
+
+      <div class="flex gap-3 mt-4">
+        <button id="qrCopy" class="flex-1 py-3 bg-blue-50 text-blue-700 font-bold rounded-xl active:bg-blue-100 border border-blue-100">คัดลอกลิงก์</button>
+        <button id="qrClose" class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl active:bg-slate-200">ปิดหน้าต่าง</button>
       </div>
     </div>
 </div>
@@ -358,6 +364,90 @@ function formatThaiDate(isoStr){
         const yearThaiShort = String(y + 543).slice(-2);
         return `${d} ${thMonth[m-1]} ${yearThaiShort}`;
     }catch(e){ return isoStr; }
+}
+
+// ฟังก์ชันสำหรับสร้างและดาวน์โหลดป้าย QR Code แบบสวยงาม
+function exportQR() {
+    const qrCanvas = document.querySelector('#qrBox canvas');
+    if(!qrCanvas) return showToast('ระบบกำลังสร้าง QR Code โปรดลองอีกครั้ง', 'error');
+
+    // สร้างกระดาษ Canvas ความละเอียดสูงสำหรับพรินต์
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000;
+    canvas.height = 1400;
+    const ctx = canvas.getContext('2d');
+
+    // 1. พื้นหลังสีขาว
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. กรอบสีน้ำเงินเข้มรอบนอกสุด
+    ctx.lineWidth = 24;
+    ctx.strokeStyle = '#1d4ed8'; 
+    ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+
+    // 3. แถบ Header สีน้ำเงิน
+    ctx.fillStyle = '#1d4ed8';
+    ctx.fillRect(24, 24, canvas.width - 48, 260);
+
+    // 4. วงกลมสีขาวสำหรับโลโก้
+    ctx.beginPath();
+    ctx.arc(180, 155, 90, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // 5. กากบาทสีแดงทางการแพทย์
+    ctx.fillStyle = '#dc2626'; 
+    ctx.fillRect(160, 95, 40, 120);
+    ctx.fillRect(120, 135, 120, 40);
+
+    // 6. ข้อความ Header
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 85px "Sarabun", sans-serif';
+    ctx.fillText('EMERGENCY', 310, 145);
+    ctx.font = 'bold 65px "Sarabun", sans-serif';
+    ctx.fillStyle = '#bfdbfe'; 
+    ctx.fillText('MED BOX', 310, 230);
+
+    // 7. ชื่อกล่องยา
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 120px "Sarabun", sans-serif';
+    ctx.fillText(currentBox, canvas.width / 2, 450);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 45px "Sarabun", sans-serif';
+    ctx.fillText('กล่องยาฉุกเฉินประจำแผนก', canvas.width / 2, 530);
+
+    // 8. กล่องรองหลัง QR Code (ทำเงาให้ดูมีมิติ)
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+    ctx.shadowBlur = 40;
+    ctx.shadowOffsetY = 15;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(180, 580, 640, 640);
+    ctx.shadowColor = 'transparent'; // เคลียร์เงาออกสำหรับวาดของชิ้นต่อไป
+    
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeRect(180, 580, 640, 640);
+
+    // 9. วาด QR Code ดึงภาพมาขยายขนาด
+    ctx.imageSmoothingEnabled = false; // บังคับให้ขอบคมชัดเสมอ (ไม่เบลอตอนขยาย)
+    ctx.drawImage(qrCanvas, 200, 600, 600, 600);
+
+    // 10. ข้อความ Footer
+    ctx.fillStyle = '#334155';
+    ctx.font = 'bold 45px "Sarabun", sans-serif';
+    ctx.fillText('สแกนด้วยโทรศัพท์ เพื่อจัดการสต็อกยา', canvas.width / 2, 1315);
+
+    // สั่งดาวน์โหลด
+    const link = document.createElement('a');
+    link.download = `QR_${currentBox.replace(/\s+/g, '_')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    showToast('ดาวน์โหลดป้ายสำเร็จ! พร้อมปริ้นท์', 'success');
 }
 
 function switchTab(tab) {
@@ -1087,6 +1177,8 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('qrModal').classList.remove('hidden');
     };
     
+    // ตั้งค่าปุ่มใหม่
+    document.getElementById('qrDownload').onclick = exportQR;
     document.getElementById('qrClose').onclick = () => document.getElementById('qrModal').classList.add('hidden');
     document.getElementById('qrCopy').onclick = () => {
         navigator.clipboard.writeText(document.getElementById('qrBtn').dataset.link);
