@@ -151,16 +151,20 @@
                       <label class="block text-xs font-bold text-green-700">วันหมดอายุ (EXP)</label>
                       <div class="flex bg-green-200/50 p-0.5 rounded-lg border border-green-200/60 shadow-inner">
                           <label class="cursor-pointer">
-                              <input type="radio" name="yearType" value="CE" class="peer sr-only" checked>
-                              <span class="px-2.5 py-1 text-[10px] font-bold rounded-md text-green-700 peer-checked:bg-green-600 peer-checked:text-white transition-colors block">ค.ศ.</span>
+                              <input type="radio" name="yearType" value="BE" class="peer sr-only" checked onchange="updateYearOptions('new')">
+                              <span class="px-2.5 py-1 text-[10px] font-bold rounded-md text-green-700 peer-checked:bg-green-600 peer-checked:text-white transition-colors block">พ.ศ.</span>
                           </label>
                           <label class="cursor-pointer">
-                              <input type="radio" name="yearType" value="BE" class="peer sr-only">
-                              <span class="px-2.5 py-1 text-[10px] font-bold rounded-md text-green-700 peer-checked:bg-green-600 peer-checked:text-white transition-colors block">พ.ศ.</span>
+                              <input type="radio" name="yearType" value="CE" class="peer sr-only" onchange="updateYearOptions('new')">
+                              <span class="px-2.5 py-1 text-[10px] font-bold rounded-md text-green-700 peer-checked:bg-green-600 peer-checked:text-white transition-colors block">ค.ศ.</span>
                           </label>
                       </div>
                   </div>
-                  <input type="date" id="newLotExp" class="w-full bg-white border border-green-300 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:border-green-400 focus:ring-green-200 transition-all">
+                  <div class="flex gap-2">
+                      <select id="newExpDay" class="w-1/4 bg-white border border-green-300 rounded-xl px-1 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:border-green-400 focus:ring-green-200"></select>
+                      <select id="newExpMonth" class="w-2/4 bg-white border border-green-300 rounded-xl px-1 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:border-green-400 focus:ring-green-200"></select>
+                      <select id="newExpYear" class="w-1/4 bg-white border border-green-300 rounded-xl px-1 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:border-green-400 focus:ring-green-200"></select>
+                  </div>
               </div>
               
               <!-- ส่วนกรอกจำนวนแบบใหม่ปรับ Layout -->
@@ -302,16 +306,20 @@
                 <label class="block text-sm font-bold text-slate-700">ระบุวันหมดอายุใหม่</label>
                 <div class="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-200 shadow-inner">
                     <label class="cursor-pointer">
-                        <input type="radio" name="editYearType" value="CE" class="peer sr-only" checked>
-                        <span class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors block">ค.ศ.</span>
+                        <input type="radio" name="editYearType" value="BE" class="peer sr-only" checked onchange="updateYearOptions('edit')">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors block">พ.ศ.</span>
                     </label>
                     <label class="cursor-pointer">
-                        <input type="radio" name="editYearType" value="BE" class="peer sr-only">
-                        <span class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors block">พ.ศ.</span>
+                        <input type="radio" name="editYearType" value="CE" class="peer sr-only" onchange="updateYearOptions('edit')">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors block">ค.ศ.</span>
                     </label>
                 </div>
             </div>
-            <input type="date" id="editLotExp" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:border-blue-400 focus:ring-blue-200 transition-all">
+            <div class="flex gap-2">
+                <select id="editExpDay" class="w-1/4 bg-white border border-slate-300 rounded-xl px-1 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:border-blue-400 focus:ring-blue-200"></select>
+                <select id="editExpMonth" class="w-2/4 bg-white border border-slate-300 rounded-xl px-1 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:border-blue-400 focus:ring-blue-200"></select>
+                <select id="editExpYear" class="w-1/4 bg-white border border-slate-300 rounded-xl px-1 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:border-blue-400 focus:ring-blue-200"></select>
+            </div>
         </div>
 
         <div class="flex gap-3">
@@ -364,6 +372,38 @@ function formatThaiDate(isoStr){
         const yearThaiShort = String(y + 543).slice(-2);
         return `${d} ${thMonth[m-1]} ${yearThaiShort}`;
     }catch(e){ return isoStr; }
+}
+
+function initDateDropdowns() {
+    const thMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const days = Array.from({length: 31}, (_, i) => `<option value="${(i+1).toString().padStart(2,'0')}">${i+1}</option>`).join('');
+    const months = thMonths.map((m, i) => `<option value="${(i+1).toString().padStart(2,'0')}">${m}</option>`).join('');
+    
+    document.getElementById('newExpDay').innerHTML = days;
+    document.getElementById('editExpDay').innerHTML = days;
+    document.getElementById('newExpMonth').innerHTML = months;
+    document.getElementById('editExpMonth').innerHTML = months;
+    
+    updateYearOptions('new');
+    updateYearOptions('edit');
+}
+
+window.updateYearOptions = function(type) {
+    const isEdit = type === 'edit';
+    const prefix = isEdit ? 'edit' : 'new';
+    
+    const radioNodeList = document.querySelectorAll(`input[name="${isEdit ? 'editYearType' : 'yearType'}"]`);
+    let yType = 'BE';
+    for(let r of radioNodeList) { if(r.checked) yType = r.value; }
+    
+    const currentYearCE = new Date().getFullYear();
+    let options = '';
+    for(let i = 0; i < 15; i++) {
+        let valCE = currentYearCE + i;
+        let displayYear = yType === 'BE' ? valCE + 543 : valCE;
+        options += `<option value="${valCE}">${displayYear}</option>`;
+    }
+    document.getElementById(`${prefix}ExpYear`).innerHTML = options;
 }
 
 // ฟังก์ชันสำหรับสร้างและดาวน์โหลดป้าย QR Code แบบสวยงาม
@@ -490,6 +530,8 @@ async function apiPost(payload){
 
 // ===== Core Logic =====
 async function initializeApp() {
+    initDateDropdowns();
+    
     // 1. Check URL Parameters for QR Code Scan
     const urlParams = new URLSearchParams(window.location.search);
     const boxParam = urlParams.get('box');
@@ -649,34 +691,22 @@ window.updateQty = function(expISO, delta, max) {
 }
 
 function addNewLot() {
-    const rawDate = document.getElementById('newLotExp').value;
-    const yType = document.querySelector('input[name="yearType"]:checked').value;
+    const y = document.getElementById('newExpYear').value;
+    const m = document.getElementById('newExpMonth').value;
+    const d = document.getElementById('newExpDay').value;
     const qty = parseInt(document.getElementById('addQty').value)||0;
     
-    if(!rawDate) return showToast('โปรดเลือกวันหมดอายุจากปฏิทิน');
     if(qty<=0) return showToast('โปรดระบุจำนวนที่ถูกต้อง');
     
-    let [yyyy, mm, dd] = rawDate.split('-');
-    let parsedYear = parseInt(yyyy, 10);
-    
-    if(yType === 'BE') {
-        parsedYear -= 543;
-    }
-    
-    // ป้องกันกรณีปฏิทินในเครื่องแปลงเป็น ค.ศ. อัตโนมัติแล้ว แต่ผู้ใช้กดเลือก พ.ศ. ซ้ำ
-    if (parsedYear < 1900) {
-        return showToast('ปีผิดปกติ โปรดตรวจสอบว่าปฏิทินเครื่องเป็น พ.ศ. หรือ ค.ศ. แล้วเลือกให้ตรงกัน');
-    }
-    
-    const expISO = `${parsedYear}-${mm}-${dd}`;
+    const expISO = `${y}-${m}-${d}`;
     
     newLotsPend.push({exp: expISO, qty}); 
     renderNewList();
     renderStockCards();
     
     // เคลียร์ช่อง input หลังกดเพิ่ม
-    document.getElementById('newLotExp').value = '';
     document.getElementById('addQty').value = '';
+    document.getElementById('newExpDay').value = '01';
 }
 
 function renderNewList() {
@@ -720,7 +750,7 @@ window.openEditExp = function(expISO, qty) {
     window._currentEditQty = qty;
     document.getElementById('editExpOldDateDisplay').textContent = formatThaiDate(expISO);
     document.getElementById('editExpQtyDisplay').textContent = qty;
-    document.getElementById('editLotExp').value = ''; 
+    document.getElementById('editExpDay').value = '01'; 
     
     // ตั้งค่าเหตุผลเป็น "แก้ไขวันหมดอายุ" อัตโนมัติ
     document.querySelector('input[name="reason"][value="แก้ไขวันหมดอายุ"]').checked = true;
@@ -734,21 +764,12 @@ window.closeEditExpModal = function() {
 }
 
 window.confirmEditExp = async function() {
-    const rawDate = document.getElementById('editLotExp').value;
-    const yType = document.querySelector('input[name="editYearType"]:checked').value;
+    const y = document.getElementById('editExpYear').value;
+    const m = document.getElementById('editExpMonth').value;
+    const d = document.getElementById('editExpDay').value;
     const confirmBtn = document.getElementById('confirmEditBtn');
 
-    if(!rawDate) return showToast('โปรดเลือกวันหมดอายุใหม่');
-
-    let [yyyy, mm, dd] = rawDate.split('-');
-    let parsedYear = parseInt(yyyy, 10);
-    if(yType === 'BE') parsedYear -= 543;
-
-    if (parsedYear < 1900) {
-        return showToast('ปีผิดปกติ โปรดตรวจสอบว่าปฏิทินเครื่องเป็น พ.ศ. หรือ ค.ศ.');
-    }
-
-    const newExpISO = `${parsedYear}-${mm}-${dd}`;
+    const newExpISO = `${y}-${m}-${d}`;
 
     // เช็คกรณีโหมดฟอร์ม (Form)
     if (window._editMode === 'FORM') {
@@ -987,7 +1008,7 @@ window.openDirectEditExp = function(box, drug, expISO, qty) {
 
     document.getElementById('editExpOldDateDisplay').textContent = formatThaiDate(expISO);
     document.getElementById('editExpQtyDisplay').textContent = qty;
-    document.getElementById('editLotExp').value = ''; 
+    document.getElementById('editExpDay').value = '01'; 
 
     document.getElementById('editExpModal').classList.remove('hidden');
 }
@@ -1083,80 +1104,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nearDays').onchange = () => { loadNear(); };
     document.getElementById('drugSelect').onchange = loadLots;
     
-    // --- เริ่มโค้ดส่วนที่เพิ่มใหม่ จัดการปฏิทิน พ.ศ. ให้อัตโนมัติ ---
-    const yearRadios = document.querySelectorAll('input[name="yearType"]');
-    const expInput = document.getElementById('newLotExp');
-
-    function adjustDateInput(targetType, forceFill = false) {
-        if (expInput.value) {
-            // กรณีมีวันที่อยู่แล้ว ให้แปลงปีไปๆ มาๆ
-            let [yStr, mStr, dStr] = expInput.value.split('-');
-            let y = parseInt(yStr, 10);
-            if (targetType === 'BE' && y < 2400) {
-                y += 543;
-            } else if (targetType === 'CE' && y >= 2400) {
-                y -= 543;
-            }
-            expInput.value = `${y}-${mStr}-${dStr}`;
-        } else if (forceFill) {
-            // กรณีช่องว่างเปล่า เติมวันที่ของวันนี้ให้ เพื่อให้ปฏิทินเด้งไปถูกปี
-            let d = new Date();
-            let yyyy = d.getFullYear();
-            let mm = String(d.getMonth() + 1).padStart(2, '0');
-            let dd = String(d.getDate()).padStart(2, '0');
-            if (targetType === 'BE') yyyy += 543;
-            expInput.value = `${yyyy}-${mm}-${dd}`;
-        }
-    }
-
-    yearRadios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            adjustDateInput(e.target.value, true);
-        });
-    });
-
-    expInput.addEventListener('click', () => {
-        if (!expInput.value) {
-            const currentType = document.querySelector('input[name="yearType"]:checked').value;
-            adjustDateInput(currentType, true);
-        }
-    });
-
-    // --- จัดการปฏิทิน พ.ศ. ของโหมดแก้ไขวันหมดอายุ ---
-    const editYearRadios = document.querySelectorAll('input[name="editYearType"]');
-    const editExpInput = document.getElementById('editLotExp');
-
-    function adjustEditDateInput(targetType, forceFill = false) {
-        if (editExpInput.value) {
-            let [yStr, mStr, dStr] = editExpInput.value.split('-');
-            let y = parseInt(yStr, 10);
-            if (targetType === 'BE' && y < 2400) y += 543;
-            else if (targetType === 'CE' && y >= 2400) y -= 543;
-            editExpInput.value = `${y}-${mStr}-${dStr}`;
-        } else if (forceFill) {
-            let d = new Date();
-            let yyyy = d.getFullYear();
-            let mm = String(d.getMonth() + 1).padStart(2, '0');
-            let dd = String(d.getDate()).padStart(2, '0');
-            if (targetType === 'BE') yyyy += 543;
-            editExpInput.value = `${yyyy}-${mm}-${dd}`;
-        }
-    }
-
-    editYearRadios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            adjustEditDateInput(e.target.value, true);
-        });
-    });
-
-    editExpInput.addEventListener('click', () => {
-        if (!editExpInput.value) {
-            const currentType = document.querySelector('input[name="editYearType"]:checked').value;
-            adjustEditDateInput(currentType, true);
-        }
-    });
-    // --- จบโค้ดส่วนที่เพิ่มใหม่ ---
-
     // Buttons
     document.getElementById('addNewBtn').onclick = addNewLot;
     document.getElementById('addToCartBtn').onclick = addToCart;
